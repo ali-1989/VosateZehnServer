@@ -10,7 +10,6 @@ import 'package:vosate_zehn_server/database/models/emailModel.dart';
 import 'package:vosate_zehn_server/database/models/mobileNumber.dart';
 import 'package:vosate_zehn_server/database/models/register.dart';
 import 'package:vosate_zehn_server/database/models/users.dart';
-import 'package:vosate_zehn_server/database/models/userBlockList.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCountry.dart';
 import 'package:vosate_zehn_server/database/models/userNameId.dart';
@@ -25,7 +24,7 @@ import 'package:vosate_zehn_server/rest_api/loginZone.dart';
 class RegisterZone {
   RegisterZone._();
 
-  static Future<Map?> checkCanRegister(GraphHandlerWrap wrapper, PreRegisterModelDb model) async{
+  static Future<Map<String, dynamic>?> checkCanRegister(GraphHandlerWrap wrapper, PreRegisterModelDb model) async{
 
     if (model.name == null || model.family == null
         || model.phoneCode == null
@@ -41,7 +40,7 @@ class RegisterZone {
     }*/
 
     if (await MobileNumberModelDb.existThisMobile(model.userType!, model.phoneCode, model.mobileNumber)) {
-      return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'ExistMobile');
+      return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'existMobile');
     }
 
     /*if (await PublicAccess.psql2.exist(DbNames.T_BadWords, "word = '${model.userName}'")) {
@@ -59,9 +58,7 @@ class RegisterZone {
     return null;
   }
   ///--------------------------------------------------------------------------
-  static dynamic preRegisterWithFullDataAndSendOtp(GraphHandlerWrap wrapper) async {
-    PublicAccess.logger.logToAll('>>> register New User: ${wrapper.bodyJSON}');
-
+  static Future<Map<String, dynamic>> preRegisterWithFullDataAndSendOtp(GraphHandlerWrap wrapper) async {
     final appName = wrapper.bodyJSON[Keys.appName];
     //final isExerciseTrainer = json['is_exercise_trainer'];
 
@@ -145,7 +142,7 @@ class RegisterZone {
     }
   }
   ///--------------------------------------------------------------------------
-  static dynamic verifyOtpAndCompletePreRegistering(GraphHandlerWrap wrapper) async {
+  static Future<Map<String, dynamic>> verifyOtpAndCompletePreRegistering(GraphHandlerWrap wrapper) async {
     String? mobileNumber = wrapper.bodyJSON[Keys.mobileNumber];
     String? phoneCode = wrapper.bodyJSON[Keys.phoneCode];
     String? code = wrapper.bodyJSON['code'];
@@ -185,7 +182,7 @@ class RegisterZone {
     return completeRegistering(wrapper, user);
   }
   ///--------------------------------------------------------------------------
-  static dynamic resendSavedOtp(GraphHandlerWrap wrapper) async {
+  static Future<Map<String, dynamic>> resendSavedOtp(GraphHandlerWrap wrapper) async {
     String? mobileNumber = wrapper.bodyJSON[Keys.mobileNumber];
     String? phoneCode = wrapper.bodyJSON[Keys.phoneCode];
     String? appName = wrapper.bodyJSON[Keys.appName];
@@ -211,55 +208,69 @@ class RegisterZone {
     }
   }
   ///--------------------------------------------------------------------------
-  static dynamic registerUserWithFullData(GraphHandlerWrap wrapper) async {
-    PublicAccess.logger.logToAll('>>> register new User: ${wrapper.bodyJSON}');
-
+  static Future<Map<String, dynamic>> registerUserWithFullData(GraphHandlerWrap wrapper) async {
     final appName = wrapper.bodyJSON[Keys.appName];
     //final isExerciseTrainer = json['is_exercise_trainer'];
 
-    final dbmRegister = PreRegisterModelDb.fromMap(wrapper.bodyJSON);
-    dbmRegister.userType = UserTypeModel.getUserTypeNumByAppName(appName);
+    final preRegisterModel = PreRegisterModelDb.fromMap(wrapper.bodyJSON);
+    preRegisterModel.userType = UserTypeModel.getUserTypeNumByAppName(appName);
 
-    final canRegister = await checkCanRegister(wrapper, dbmRegister);
+    final canRegister = await checkCanRegister(wrapper, preRegisterModel);
 
     if(canRegister != null) {
       return canRegister;
     }
 
-    //dbmRegister.id = await DatabaseNs.getNextSequenceNumeric(DbNames.Seq_NewUser);
+    //preRegisterModel.id = await DatabaseNs.getNextSequenceNumeric(DbNames.Seq_NewUser);
 
-    final x = await PreRegisterModelDb.upsertModel(dbmRegister);
+    final x = await PreRegisterModelDb.upsertModel(preRegisterModel);
 
     if(x != null && x > 0) {
-      final res = GraphHandler.generateResultOk();
-      res[Keys.mobileNumber] = dbmRegister.mobileNumber;
-      res[Keys.phoneCode] = dbmRegister.phoneCode;
-
-      return res;
+      return completeRegistering(wrapper, preRegisterModel);
     }
     else {
       return GraphHandler.generateResultError(HttpCodes.error_spacialError);
     }
   }
   ///--------------------------------------------------------------------------
-  static dynamic completeRegistering(GraphHandlerWrap wrapper, PreRegisterModelDb userModel) async{
+  static Future<Map<String, dynamic>> completeRegistering(GraphHandlerWrap wrapper, PreRegisterModelDb preUserModel) async{
     final deviceId = wrapper.bodyJSON[Keys.deviceId];
+    final byEmail = wrapper.bodyJSON.containsKey('email');
+    final String? email = wrapper.bodyJSON['email'];
+
+
     final genUserId = await DatabaseNs.getNextSequence(DbNames.Seq_User);
 
-    final temp = userModel.toMap();
-    temp[Keys.userId] = genUserId;
+    final preUserMap = preUserModel.toMap();
+    preUserMap[Keys.userId] = genUserId;
 
     ///............ Users
-    final user = UserModelDb.fromMap(temp);
+    final userModel = UserModelDb.fromMap(preUserMap);
 
-    var x = await UserModelDb.insertModel(user);
+    var x = await UserModelDb.insertModel(userModel);
 
     if (!x) {
       return GraphHandler.generateResultError(HttpCodes.error_databaseError, cause: 'Insert User Error');
     }
 
+    if(byEmail){
+      preUserMap[Keys.userName] = email!.substring(0, email.indexOf('@'));
+    }
+    else {
+      final mobile = preUserModel.mobileNumber!;
+      var userName = mobile.substring(0, mobile.length-2);
+
+      var temp = userName + Generator.generateName(3);
+
+      while(await UserNameModelDb.existThisUserName(temp)){
+        temp = userName + Generator.generateName(3);
+      }
+
+      preUserMap[Keys.userName] = temp;
+    }
+
     ///............ User Name [Password]
-    final nameModel = UserNameModelDb.fromMap(temp);
+    final nameModel = UserNameModelDb.fromMap(preUserMap);
     //nameModel.hash_password = Generator.generateMd5(nameModel.password!);
 
     x = await UserNameModelDb.insertModel(nameModel);
@@ -270,22 +281,41 @@ class RegisterZone {
     }
 
     ///............ mobile
-    final userMobile = MobileNumberModelDb.fromMap(temp);
+    if(byEmail){
+      final userEmail = UserEmailDb();
+      userEmail.email = email;
+      userEmail.user_id = genUserId;
+      userEmail.user_type = preUserModel.userType?? 1;
 
-    x = await MobileNumberModelDb.insertModel(userMobile);
+      x = await UserEmailDb.insertModel(userEmail);
 
-    if (!x) {
-      await UserNameModelDb.deleteByUserId(genUserId);
-      await UserModelDb.deleteByUserId(genUserId);
+      if (!x) {
+        await UserNameModelDb.deleteByUserId(genUserId);
+        await UserModelDb.deleteByUserId(genUserId);
 
-      return GraphHandler.generateResultError(HttpCodes.error_databaseError, cause: 'Insert Mobile Error');
+        return GraphHandler.generateResultError(HttpCodes.error_databaseError, cause: 'Insert email Error');
+      }
+    }
+    else {
+      final userMobile = MobileNumberModelDb.fromMap(preUserMap);
+
+      x = await MobileNumberModelDb.insertModel(userMobile);
+
+      if (!x) {
+        await UserNameModelDb.deleteByUserId(genUserId);
+        await UserModelDb.deleteByUserId(genUserId);
+
+        return GraphHandler.generateResultError(HttpCodes.error_databaseError, cause: 'Insert Mobile Error');
+      }
     }
 
     ///............ country
-    var country = UserCountryModelDb.fromMap(temp);
+    var country = UserCountryModelDb.fromMap(preUserMap);
     x = await UserCountryModelDb.insertModel(country);
 
-    await PreRegisterModelDb.deleteRecord(userModel.mobileNumber!, userModel.userName!);
+    if(!byEmail) {
+      await PreRegisterModelDb.deleteRecordByMobile(preUserModel.phoneCode!, preUserModel.mobileNumber!);
+    }
 
     final token = Generator.generateKey(40);
     final uc = UserConnectionModelDb();
@@ -303,21 +333,12 @@ class RegisterZone {
     final info = await CommonMethods.getUserLoginInfo(genUserId, false);
     res.addAll(info);
 
-    /// manager users must apply by manager first
-    if(userModel.userType != UserTypeModel.getUserTypeNumByType(UserTypeModel.managerUser)){
-      res[Keys.token] = token;
-    }
-    else {
-      await UserBlockListModelDb.blockUser(genUserId, cause: 'wait for apply');
-      //todo : send alert to manager user
-    }
+    res[Keys.token] = {Keys.token: token};
 
     return res;
   }
   ///--------------------------------------------------------------------------
-  static dynamic verifyOtp(GraphHandlerWrap wrapper) async{
-    PublicAccess.logger.logToAll('>>> verifyByOtp: ${wrapper.bodyJSON}');
-    
+  static Future<Map<String, dynamic>> verifyOtp(GraphHandlerWrap wrapper) async{
     String? mobileNumber = wrapper.bodyJSON[Keys.mobileNumber];
     String? phoneCode = wrapper.bodyJSON[Keys.phoneCode];
     String? vCode = wrapper.bodyJSON['code'];
@@ -347,9 +368,7 @@ class RegisterZone {
     return LoginZone.loginByPhoneNumber(wrapper);
   }
   ///--------------------------------------------------------------------------
-  static dynamic verifyEmail(GraphHandlerWrap wrapper) async{
-    PublicAccess.logger.logToAll('>>> verifyByEmail: ${wrapper.bodyJSON}');
-    
+  static Future<Map<String, dynamic>> verifyEmail(GraphHandlerWrap wrapper) async{
     String? email = wrapper.bodyJSON['email'];
     String? appName = wrapper.bodyJSON[Keys.appName];
 
@@ -367,7 +386,7 @@ class RegisterZone {
     return LoginZone.loginByEmail(wrapper);
   }
   ///--------------------------------------------------------------------------
-  static dynamic restorePassword(GraphHandlerWrap wrapper) async{
+  static Future<Map<String, dynamic>> restorePassword(GraphHandlerWrap wrapper) async{
     String? mobileNumber = wrapper.bodyJSON[Keys.mobileNumber];
     String? phoneCode = wrapper.bodyJSON[Keys.phoneCode];
     String? appName = wrapper.bodyJSON[Keys.appName];

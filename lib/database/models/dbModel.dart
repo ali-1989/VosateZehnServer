@@ -7,7 +7,7 @@ abstract class DbModel {
 
   DbModel();
 
-  DbModel.fromMap(Map<String, dynamic> map, {bool lowerKeys = false}){
+  DbModel.fromMap(Map map, {bool lowerKeys = false}){
     if(lowerKeys){
       var clone = Clone.mapDeepCopy(map);
 

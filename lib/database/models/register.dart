@@ -61,7 +61,7 @@ class PreRegisterModelDb extends DbModel {
     userName = map[Keys.userName];
     //password = map['password'];
     birthdate = map[Keys.birthdate];
-    register_date = map['register_date'];
+    register_date = map[Keys.registerDate];
     country_iso = map[Keys.countryIso];
     phoneCode = map[Keys.phoneCode]?? map['country_code'];
     mobileNumber = map[Keys.mobileNumber];
@@ -91,7 +91,7 @@ class PreRegisterModelDb extends DbModel {
     map[Keys.extraJs] = CommonMethods.castToJsonb(extra_js);
 
     if(register_date != null) {
-      map['register_date'] = register_date;
+      map[Keys.registerDate] = register_date;
     }
 
     return map;
@@ -166,8 +166,8 @@ class PreRegisterModelDb extends DbModel {
     return cursor.elementAt(0).toMap();
   }
 
-  static Future<bool> deleteRecord(String mobileNumber, String userName) async {
-    final where = " mobile_number = '$mobileNumber' AND user_name = '$userName'";
+  static Future<bool> deleteRecordByMobile(String phoneCode, String mobileNumber) async {
+    final where = " phone_code = '$phoneCode' AND mobile_number = '$mobileNumber'";
 
     final x = await PublicAccess.psql2.delete(DbNames.T_PreRegisteringUser, where);
 

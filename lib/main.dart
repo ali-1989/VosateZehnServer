@@ -36,7 +36,7 @@ void main(List<String> arguments) async {
     OS: ${Platform.operatingSystem}  (${Platform.operatingSystemVersion})
     Locale: ${Platform.localeName}
     Domain: ${PublicAccess.domain}
-    ports: ${Constants.port}   | WS: ${Constants.wsPort}
+    ports:  http > ${Constants.port}  |  WS > ${Constants.wsPort}
     IPs: ${await NetHelper.getIps()}
     *ram*
     #######################################################################''';

@@ -42,7 +42,7 @@ class UserCountryModelDb extends DbModel {
 
 
   @override
-  UserCountryModelDb.fromMap(Map<String, dynamic> map) : super.fromMap(map) {
+  UserCountryModelDb.fromMap(Map map) : super.fromMap(map) {
     user_id = map[Keys.userId];
     country_iso = map[Keys.countryIso];
     city_name = map['city_name'];

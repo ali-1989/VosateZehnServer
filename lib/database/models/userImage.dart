@@ -9,6 +9,7 @@ import 'package:vosate_zehn_server/publicAccess.dart';
 /// note: insert relative path no full path [for where]
 
 class UserImageModelDb extends DbModel {
+  int? id;
   late int user_id;
   late int type;
   String? imagePath;
@@ -20,6 +21,7 @@ class UserImageModelDb extends DbModel {
   // 3: Biography
   static final String QTbl_UserImages = '''
 		CREATE TABLE IF NOT EXISTS #tb (
+       id BIGSERIAL NOT NULL,
        user_id BIGINT NOT NULL,
        type SMALLINT NOT NULL,
        image_path varchar(400) NOT NULL,
@@ -36,7 +38,7 @@ class UserImageModelDb extends DbModel {
       .replaceFirst('#ref2', DbNames.T_TypeForUserImage);
 
   static final String QIdx_UserImages$type = '''
-		CREATE INDEX IF NOT EXISTS #tb_type_ix ON #tb
+		CREATE INDEX IF NOT EXISTS #tb_type_idx ON #tb
 		USING BTREE (type);
 		'''
       .replaceAll('#tb', DbNames.T_UserImages);
@@ -76,7 +78,8 @@ class UserImageModelDb extends DbModel {
   UserImageModelDb();
 
   @override
-  UserImageModelDb.fromMap(Map<String, dynamic> map) : super.fromMap(map) {
+  UserImageModelDb.fromMap(Map map) : super.fromMap(map) {
+    id = map[Keys.id]?? map[Keys.profileImageId];
     user_id = map[Keys.userId];
     type = map[Keys.type];
     imagePath = map[Keys.imagePath];
@@ -91,6 +94,15 @@ class UserImageModelDb extends DbModel {
     map[Keys.type] = type;
     map[Keys.imagePath] = imagePath;
     map['date_of'] = date;
+
+    if(id != null) {
+      if (type == 1) {
+        map[Keys.profileImageId] = id;
+      }
+      else {
+        map[Keys.id] = id;
+      }
+    }
 
     return map;
   }

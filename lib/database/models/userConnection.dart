@@ -73,7 +73,7 @@ class UserConnectionModelDb extends DbModel {
 
   @override
   Map<String, dynamic> toMap() {
-    var map = <String, dynamic>{};
+    final map = <String, dynamic>{};
 
     map[Keys.userId] = user_id;
     map[Keys.deviceId] = device_id;
@@ -81,7 +81,7 @@ class UserConnectionModelDb extends DbModel {
     map[Keys.languageIso] = language_iso;
     map['last_touch'] = last_touch;
     map['is_login'] = is_login;
-    map[Keys.token] = token;
+    map[Keys.token] = {Keys.token: token};
 
     return map;
   }

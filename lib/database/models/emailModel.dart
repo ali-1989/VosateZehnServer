@@ -8,6 +8,7 @@ class UserEmailDb extends DbModel {
   int user_type = 1;
   String? email;
 
+  UserEmailDb();
 
   static final String QTbl_userEmail = '''
 		CREATE TABLE IF NOT EXISTS #tb (

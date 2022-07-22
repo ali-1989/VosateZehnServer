@@ -44,6 +44,7 @@ enum UserDataType {
   userName,
   userNamePassword,
   mobileNumber,
+  email,
   lastTouch,
 }
 //cityAndCountry,

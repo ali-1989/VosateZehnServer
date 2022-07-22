@@ -4,6 +4,7 @@ import 'package:assistance_kit/api/helpers/jsonHelper.dart';
 import 'package:assistance_kit/api/helpers/urlHelper.dart';
 import 'package:vosate_zehn_server/app/pathNs.dart';
 import 'package:vosate_zehn_server/database/dbNames.dart';
+import 'package:vosate_zehn_server/database/models/emailModel.dart';
 import 'package:vosate_zehn_server/database/models/mobileNumber.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCurrency.dart';
@@ -32,8 +33,9 @@ class CommonMethods {
     getDataTypes.add(UserDataType.personal);
     getDataTypes.add(UserDataType.country);
     getDataTypes.add(UserDataType.currency);
-    //getDataTypes.add(password? UserDataType.userNamePassword : UserDataType.userName);
+    getDataTypes.add(password? UserDataType.userNamePassword : UserDataType.userName);
     getDataTypes.add(UserDataType.mobileNumber);
+    getDataTypes.add(UserDataType.email);
     getDataTypes.add(UserDataType.profileImage);
 
     return _getInfoForUser(userId, getDataTypes);
@@ -84,6 +86,10 @@ class CommonMethods {
 
       if(type == UserDataType.mobileNumber) {
         res.addAll((await MobileNumberModelDb.fetchMap(userId))?? {});
+      }
+
+      if(type == UserDataType.email) {
+        res.addAll((await UserEmailDb.fetchMap(userId))?? {});
       }
 
       if(type == UserDataType.profileImage) {

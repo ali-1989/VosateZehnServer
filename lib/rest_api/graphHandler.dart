@@ -106,7 +106,7 @@ class GraphHandler {
       wrapper.bodyJSON = bJSON;
       wrapper.zoneRequest = request;
 
-      return _process(wrapper);
+      return await _process(wrapper);
     }
     catch (e){
       PublicAccess.logInDebug('>>> Error in process request: $e ');

@@ -9,7 +9,7 @@ class Constants {
   static String dbUserName = 'irisAdmin';
   static String dbPassword = 'iris9277303';
   static int port = 7436;
-  static int wsPort = 7445;
+  static int wsPort = 7438;
   static int MAX_int =  0x7fffffff;
   static int MAX_long = 9223372036854775807; //19 digit  0x7fffffffffffffff;
 }

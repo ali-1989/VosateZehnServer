@@ -17,7 +17,7 @@ import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
 class LoginZone {
   LoginZone._();
 
-  static dynamic loginByUserName(GraphHandlerWrap wrapper) async {
+  static Future<Map<String, dynamic>> loginByUserName(GraphHandlerWrap wrapper) async {
     var js = wrapper.bodyJSON;
 
     var userName = js[Keys.userName]?? '';
@@ -65,7 +65,7 @@ class LoginZone {
     return _completeLogin(userId, token);
   }
   ///---------------------------------------------------------------------------
-  static dynamic loginByPhoneNumber(GraphHandlerWrap wrapper) async {
+  static Future<Map<String, dynamic>> loginByPhoneNumber(GraphHandlerWrap wrapper) async {
     var js = wrapper.bodyJSON;
 
     final phoneCode = js[Keys.phoneCode];
@@ -119,7 +119,7 @@ class LoginZone {
     return _completeLogin(userId, token);
   }
   ///---------------------------------------------------------------------------
-  static dynamic loginByEmail(GraphHandlerWrap wrapper) async {
+  static Future<Map<String, dynamic>> loginByEmail(GraphHandlerWrap wrapper) async {
     var js = wrapper.bodyJSON;
 
     final email = js['email'];
@@ -172,11 +172,11 @@ class LoginZone {
     return _completeLogin(userId, token);
   }
   ///---------------------------------------------------------------------------
-  static Future<Map> _completeLogin(int userId, String token) async {
+  static Future<Map<String, dynamic>> _completeLogin(int userId, String token) async {
     final res = await CommonMethods.getUserLoginInfo(userId, false);
 
     res[Keys.status] = Keys.ok;
-    res[Keys.token] = token;
+    res[Keys.token] = {Keys.token: token};
 
     return res;
   }

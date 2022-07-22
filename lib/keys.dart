@@ -1,8 +1,6 @@
 class Keys {
   Keys._();
 
-  static const isChat = 'isChat';
-
   static const requestZone = 'request_zone';
   static const status = 'status';
   static const command = 'command';
@@ -45,6 +43,7 @@ class Keys {
   static const phoneCode = 'phone_code';
   static const languageIso = 'language_iso';
   static const countryIso = 'country_iso';
+  static const profileImageId = 'profile_image_id';
   static const profileImageUrl = 'profile_image_url';
   static const profileImagePath = 'profile_image_path';
   static const imageUri = 'image_uri';
@@ -57,4 +56,6 @@ class Keys {
   static const orderNum = 'order_num';
   static const nodeName = 'node_name';
   static const extraJs = 'extra_js';
+  static const isChat = 'isChat';
+
 }

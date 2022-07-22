@@ -65,13 +65,13 @@ class UserModelDb extends DbModel {
     name = map[Keys.name];
     family = map[Keys.family];
     birthdate = map[Keys.birthdate];
-    register_date = map['register_date'];
+    register_date = map[Keys.registerDate];
     is_deleted = BoolHelper.itemToBool(map['is_deleted']);
   }
 
   @override
   Map<String, dynamic> toMap() {
-    var map = <String, dynamic>{};
+    final map = <String, dynamic>{};
 
     map[Keys.userId] = user_id;
     map[Keys.userType] = user_type;
@@ -79,8 +79,11 @@ class UserModelDb extends DbModel {
     map[Keys.name] = name;
     map[Keys.family] = family;
     map[Keys.birthdate] = birthdate;
-    map['register_date'] = register_date;
     map['is_deleted'] = is_deleted;
+
+    if(register_date != null){
+      map[Keys.registerDate] = register_date;
+    }
 
     return map;
   }

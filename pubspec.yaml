@@ -1,0 +1,24 @@
+name: vosate_zehn_server
+description: Server application.
+# homepage: https://www.example.com
+
+publish_to: 'none'
+
+version: 0.1.0
+
+environment:
+  sdk: '>=2.15.0'
+
+dependencies:
+  alfred: 0.1.5+1                      # Edited
+  timezone_utc_offset: ^1.1.0
+  dio: 4.0.6
+  http: ^0.13.4
+  file: ^6.1.2
+
+  assistance_kit:
+    path: ../AssistanceKit
+
+
+dev_dependencies:
+  test: ^1.21.4

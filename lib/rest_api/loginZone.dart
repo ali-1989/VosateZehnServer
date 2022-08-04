@@ -10,6 +10,7 @@ import 'package:vosate_zehn_server/database/models/userNameId.dart';
 import 'package:vosate_zehn_server/database/models/userPlace.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/models/userTypeModel.dart';
+import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/commonMethods.dart';
 import 'package:vosate_zehn_server/rest_api/graphHandler.dart';
 import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
@@ -66,7 +67,7 @@ class LoginZone {
   }
   ///---------------------------------------------------------------------------
   static Future<Map<String, dynamic>> loginByPhoneNumber(GraphHandlerWrap wrapper) async {
-    var js = wrapper.bodyJSON;
+    final js = wrapper.bodyJSON;
 
     final phoneCode = js[Keys.phoneCode];
     final mobileNumber = js[Keys.mobileNumber];
@@ -120,7 +121,7 @@ class LoginZone {
   }
   ///---------------------------------------------------------------------------
   static Future<Map<String, dynamic>> loginByEmail(GraphHandlerWrap wrapper) async {
-    var js = wrapper.bodyJSON;
+    final js = wrapper.bodyJSON;
 
     final email = js['email'];
     final deviceId = js[Keys.deviceId];
@@ -170,6 +171,36 @@ class LoginZone {
     await UserConnectionModelDb.upsertUserActiveTouch(userId, deviceId, langIso: languageIso, token: token);
 
     return _completeLogin(userId, token);
+  }
+  ///---------------------------------------------------------------------------
+  static Future<Map<String, dynamic>> loginAdmin(GraphHandlerWrap wrapper) async {
+    final js = wrapper.bodyJSON;
+
+    final userName = js[Keys.userName];
+    final password = js[Keys.password];
+    final appName = js[Keys.appName];
+    final deviceId = js[Keys.deviceId];
+    final languageIso = js[Keys.languageIso];
+
+    final userType = UserTypeModel.getUserTypeNumByAppName(appName);
+    final isAdmin = await UserNameModelDb.isAdmin(userName, password);
+
+    if (!isAdmin || userType != UserTypeModel.managerUserTypeNumber) {
+      return GraphHandler.generateResultError(HttpCodes.error_userNamePassIncorrect);
+    }
+
+    js[Keys.userId] = PublicAccess.adminUserId;
+    //.......upsert device id........................
+    final deviceCaller = DeviceCellarModelDb.fromMap(js);
+    await DeviceCellarModelDb.upsertModel(deviceCaller);
+    //.......upsert place........................
+    var userPlace = UserPlaceModelDb.fromMap(js);
+    await UserPlaceModelDb.upsertModel(userPlace);
+    //...............................................
+    final token = Generator.generateKey(40);
+    await UserConnectionModelDb.upsertUserActiveTouch(PublicAccess.adminUserId, deviceId, langIso: languageIso, token: token);
+
+    return _completeLogin(PublicAccess.adminUserId, token);
   }
   ///---------------------------------------------------------------------------
   static Future<Map<String, dynamic>> _completeLogin(int userId, String token) async {

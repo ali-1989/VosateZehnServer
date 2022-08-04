@@ -13,6 +13,7 @@ import 'package:vosate_zehn_server/models/currencyModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/ServerNs.dart';
 import 'package:vosate_zehn_server/rest_api/wsServerNs.dart';
+import 'package:vosate_zehn_server/webSite/webNs.dart';
 
 // db[bigint]   == dart[int]
 // db[numeric]  == dart[bigint]
@@ -71,6 +72,10 @@ void main(List<String> arguments) async {
 
   PublicAccess.wsServer = WsServerNs.prepareWsServer();
   await PublicAccess.wsServer.listen(Constants.wsPort);
+
+  PublicAccess.webServer = WebNs.prepareServer();
+  await PublicAccess.webServer.listen(80);
+
 
   CronAssistance.startCronJobs();
   //Kaveh.init();

@@ -4,6 +4,7 @@ class UserTypeModel {
   static const UserType managerUser = UserType.managerUser;
   static const String vosateZehnApp = 'vosate_zehn';
   static const String vosateZehnManagerApp = 'vosate_zehn Manager';
+  static const int managerUserTypeNumber = 9;
 
   UserTypeModel();
 
@@ -25,7 +26,7 @@ class UserTypeModel {
     }
 
     if(type == managerUser) {
-      return 9;
+      return managerUserTypeNumber;
     }
 
     return 0;
@@ -37,7 +38,7 @@ class UserTypeModel {
     }
 
     if(appName == vosateZehnManagerApp) {
-      return 9;
+      return managerUserTypeNumber;
     }
 
     return 0;

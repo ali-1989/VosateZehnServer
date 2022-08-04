@@ -152,6 +152,10 @@ class GraphHandler {
       return LoginZone.loginByUserName(wrapper);
     }
 
+    if (request == 'login_admin') {
+      return LoginZone.loginAdmin(wrapper);
+    }
+
     if (request == 'LogoffUserReport') {
       return setUserIsLogoff(wrapper.request, wrapper.bodyJSON);
     }

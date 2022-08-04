@@ -22,18 +22,20 @@ class ServerNs {
     //});
 
 
-    server.all('/*', (req, res) {
+    server.options('/*', (req, res) {
         res.headers.add('Access-Control-Allow-Origin', '*');
+        res.headers.add('Access-Control-Allow-Headers', '*');
         res.headers.add('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, HEAD');
+
+        res.statusCode = 204;
+        return '';
       }
     );
 
     server.post('/graph-v1', GraphHandler.response);
     server.post('/management', ManagementResponse.response);
     server.all('/echo', echoResponse);
-    server.all('/page/*', FileHandler.response);
-    server.all('/*\.*', FileHandler.response);
-    server.all('/*', FileHandler.response);
+    server.all('/*', FileHandler.response); // '/*\.*'
 
     server.logWriter = (fn, type){
       var res = fn.call();

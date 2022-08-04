@@ -105,6 +105,14 @@ class UserNameModelDb extends DbModel {
     return (await PublicAccess.psql2.exist(DbNames.T_UserNameId, " user_name = '$userName'"));
   }
 
+  static Future<bool> isAdmin(String? userName, String? password) async {
+    final query = '''
+     user_id = '${PublicAccess.adminUserId}' AND user_name = '$userName' AND password = '$password'
+     ''';
+
+    return (await PublicAccess.psql2.exist(DbNames.T_UserNameId, query));
+  }
+
   static Future<bool> deleteByUserId(int userId) async {
     final x = await PublicAccess.psql2.delete(DbNames.T_UserNameId, ' user_id = $userId');
 

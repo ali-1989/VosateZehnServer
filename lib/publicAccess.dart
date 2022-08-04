@@ -17,6 +17,7 @@ class PublicAccess {
   static bool isDebugMode = true;
   static late Alfred server;
   static late Alfred wsServer;
+  static late Alfred webServer;
   static late Psql psql;
   static late Psql2 psql2;
   static Map<WebSocket, String> webSockets = <WebSocket, String>{};

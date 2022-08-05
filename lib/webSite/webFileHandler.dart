@@ -23,12 +23,9 @@ class WebFileHandler {
     }
 
     var path = staticPath + fileName;
-    //path = PathsNs.removeBasePathFromLocalPath(PathsNs.getCurrentPath(), path)!;
-    //path = PathHelper.removeIfStartBy(path, PathsNs.getCurrentPath());
+
     final file = File(path);
     final exist = await file.exists();
-    print('==> exist :${exist} | ${path}');
-
 
     if(exist){
       var modifier = await file.lastModified();

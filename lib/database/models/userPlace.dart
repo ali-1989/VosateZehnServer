@@ -77,7 +77,7 @@ class UserPlaceModelDb extends DbModel {
     user_id = map[Keys.userId];
     device_id = map[Keys.deviceId];
     city_name = map['city_name'];
-    timezone_offset = map['timezone_offset'];
+    timezone_offset = map['timezone_offset']?? 0;
     country_iso = map[Keys.countryIso];
     register_date = map['register_date'];
     latitude = map['latitude'];

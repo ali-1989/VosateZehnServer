@@ -10,7 +10,7 @@ import 'package:vosate_zehn_server/rest_api/fileHandler.dart';
 class WebHandler {
   WebHandler._();
 
-  static final adminIndexPage = PathHelper.resolvePath(FileHandler.staticPath + 'www/adminZone/index.html')!;
+  static final adminIndexPage = PathHelper.resolvePath(FileHandler.staticPath + 'www/admin/index.html')!;
   static final publicIndexPage = PathHelper.resolvePath(FileHandler.staticPath + 'www/public/index.html')!;
 
   static FutureOr adminResponse(HttpRequest req, HttpResponse res) async {

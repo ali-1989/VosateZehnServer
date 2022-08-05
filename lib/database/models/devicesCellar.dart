@@ -17,10 +17,10 @@ class DeviceCellarModelDb extends DbModel {
   /// brand: onWeb => userAgent
   static final String QTbl_DevicesCellar = '''
 		CREATE TABLE IF NOT EXISTS #tb (
-      device_id varchar(40) NOT NULL,
+      device_id varchar(50) NOT NULL,
       user_id BIGINT DEFAULT NULL,
       brand varchar(100) DEFAULT NULL,
-      model varchar(40) DEFAULT NULL,
+      model varchar(50) DEFAULT NULL,
       api varchar(15) DEFAULT NULL,
       device_type varchar(20) DEFAULT NULL,
       import_date TIMESTAMP DEFAULT (now() at time zone 'utc'),

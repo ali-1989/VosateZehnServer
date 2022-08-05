@@ -109,7 +109,8 @@ class GraphHandler {
       return await _process(wrapper);
     }
     catch (e){
-      PublicAccess.logInDebug('>>> Error in process request: $e ');
+      PublicAccess.logInDebug('>>> Error in process graph-request:\n$e');
+      //rethrow;
     }
   }
   ///==========================================================================================================

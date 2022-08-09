@@ -2,6 +2,7 @@ import 'dart:core';
 import 'package:assistance_kit/database/psql2.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
 import 'package:assistance_kit/api/helpers/urlHelper.dart';
+import 'package:assistance_kit/dateSection/dateHelper.dart';
 import 'package:vosate_zehn_server/app/pathNs.dart';
 import 'package:vosate_zehn_server/database/dbNames.dart';
 import 'package:vosate_zehn_server/database/models/emailModel.dart';
@@ -103,6 +104,38 @@ class CommonMethods {
 
     return res;
   }
+
+  static Future<int?> setAboutUsData(int userId, String data) async {
+    var where = '''key = 'about_us' ''';
+
+    final kv = <String, dynamic>{};
+    kv['owner_id'] = userId;
+    kv['key'] = 'about_us';
+    kv['data'] = data;
+    kv['update_date'] = DateHelper.getNowTimestampToUtc();
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_HtmlHolder, kv, where: where);
+
+    if(cursor is num){
+      return cursor!.toInt();
+    }
+
+    if(cursor is String){
+      return int.parse(cursor!);
+    }
+
+    return null;
+  }
+
+  static Future<String?> getAboutUsData() async {
+    var where = '''SELECT * FROM #T WHERE key = 'about_us' ''';
+    where = where.replaceFirst('#T', DbNames.T_HtmlHolder);
+
+    return await PublicAccess.psql2.getColumn(DbNames.T_HtmlHolder, 'data');
+  }
+
+
+
 
   // [AppUser] for manager app
   static Future<List<Map<String, dynamic>>> searchOnUsers(Map<String, dynamic> jsOption) async {

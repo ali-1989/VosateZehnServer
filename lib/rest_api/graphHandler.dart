@@ -23,6 +23,7 @@ class GraphHandlerWrap {
   late HttpResponse response;
   late Map<String, dynamic> bodyJSON;
   late String zoneRequest;
+  int? userId;
 }
 ///==========================================================================================================
 class GraphHandler {
@@ -55,7 +56,7 @@ class GraphHandler {
     PublicAccess.logInDebug(bJSON.toString());
 
     final request = bJSON[Keys.requestZone];
-    final requesterId = bJSON[Keys.requesterId];
+    final requesterId = int.tryParse(bJSON[Keys.requesterId]);
     final deviceId = bJSON[Keys.deviceId];
     
     if(deviceId == null) {
@@ -95,8 +96,6 @@ class GraphHandler {
       if(!isManager){
         return generateResultError(HttpCodes.error_canNotAccess);
       }
-
-      //request = bJSON[Keys.subRequest];
     }
     ///.............................................................................................
     try{
@@ -105,6 +104,7 @@ class GraphHandler {
       wrapper.response = res;
       wrapper.bodyJSON = bJSON;
       wrapper.zoneRequest = request;
+      wrapper.userId = requesterId;
 
       return await _process(wrapper);
     }
@@ -161,78 +161,48 @@ class GraphHandler {
       return setUserIsLogoff(wrapper.request, wrapper.bodyJSON);
     }
 
-    if (request == 'DeleteProfileAvatar') {
-      return deleteProfileAvatar(wrapper.request, wrapper.bodyJSON);
+    if (request == 'set_about_us_data') {
+      return setAboutUsData(wrapper);
     }
 
-    if (request == 'SetUserBlockingState') {
-      return setUserBlockingState(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'UpdateProfileUserName') {
-      return updateProfileUserName(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'UpdateProfileNameFamily') {
-      return updateProfileNameFamily(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'UpdateProfileSex') {
-      return updateProfileSex(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'UpdateProfileBirthDate') {
-      return updateProfileBirthDate(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'UpdateUserCountryIso') {
-      return updateUserCountryIso(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'AddAdvertising') {
-      return addAdvertising(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'DeleteAdvertising') {
-      return deleteAdvertising(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'ChangeAdvertisingShowState') {
-      return changeAdvertisingShowState(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'ChangeAdvertisingTitle') {
-      return changeAdvertisingTitle(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'ChangeAdvertisingTag') {
-      return changeAdvertisingTag(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'ChangeAdvertisingType') {
-      return changeAdvertisingType(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'ChangeAdvertisingPhoto') {
-      return changeAdvertisingPhoto(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'ChangeAdvertisingOrder') {
-      return changeAdvertisingOrder(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'ChangeAdvertisingDate') {
-      return changeAdvertisingDate(wrapper.request, wrapper.bodyJSON);
-    }
-
-    if (request == 'ChangeAdvertisingLink') {
-      return changeAdvertisingLink(wrapper.request, wrapper.bodyJSON);
+    if (request == 'get_about_us_data') {
+      return getAboutUsData(wrapper);
     }
 
 
     return generateResultError(HttpCodes.error_requestNotDefined);
   }
   ///==========================================================================================================
+  static Future<Map<String, dynamic>> setAboutUsData(GraphHandlerWrap wrapper) async{
+    final data = wrapper.bodyJSON[Keys.data];
+
+    /*if(deviceId == null) {
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }*/
+
+    final r = await CommonMethods.setAboutUsData(wrapper.userId!, data);
+
+    if(r == null || r < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set about us');
+    }
+
+    final res = generateResultOk();
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getAboutUsData(GraphHandlerWrap wrapper) async{
+    final r = await CommonMethods.getAboutUsData();
+
+    if(r == null) {
+      return generateResultError(HttpCodes.error_dataNotExist);
+    }
+
+    final res = generateResultOk();
+    res[Keys.data] = r;
+
+    return res;
+  }
+
   static Future<Map<String, dynamic>> setUserIsLogoff(HttpRequest req, Map<String, dynamic> js) async{
     final userId = js[Keys.userId];
     final deviceId = js[Keys.deviceId];

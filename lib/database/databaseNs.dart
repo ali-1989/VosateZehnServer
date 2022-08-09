@@ -20,6 +20,7 @@ import 'package:vosate_zehn_server/database/models/userImage.dart';
 import 'package:vosate_zehn_server/database/models/userMetaData.dart';
 import 'package:vosate_zehn_server/database/models/userNameId.dart';
 import 'package:vosate_zehn_server/database/models/userPlace.dart';
+import 'package:vosate_zehn_server/models/userTypeModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:assistance_kit/extensions.dart';
 
@@ -360,6 +361,8 @@ class DatabaseNs {
 
     await DB.execution(QTable_AppVersions);
     await DB.execution(QIndex_AppVersions$version_code);
+
+    await DB.execution(QTbl_HtmlHolder);
   }
 
   static Future prepareFunctions() async{
@@ -1084,6 +1087,16 @@ class DatabaseNs {
   CREATE INDEX IF NOT EXISTS AppVersions_VersionCode_idx
   ON ${DbNames.T_AppVersions} USING BTREE (version_code);''';
 
+  static final String QTbl_HtmlHolder = '''
+  CREATE TABLE IF NOT EXISTS ${DbNames.T_HtmlHolder} (
+       id SERIAL,
+       key varchar(50) DEFAULT NULL,
+       data varchar(20000) DEFAULT NULL,
+       owner_id BIGINT NOT NULL,
+       update_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       CONSTRAINT pk_html_holder PRIMARY KEY (id),
+       CONSTRAINT uk1_html_holder UNIQUE (key)
+      );''';
 
   //======	Function	=====================================================================
   /*static final String Q_fn_utc = "CREATE OR REPLACE FUNCTION utc()\n" +
@@ -1162,8 +1175,8 @@ class DatabaseNs {
     INSERT INTO ${DbNames.T_Users} 
       ( user_id, name, Family, user_type)
       values
-        ( ${PublicAccess.systemUserId}, 'System1', 'system', 3)
-      , ( ${PublicAccess.adminUserId}, 'Admin', 'admin', 3)
+        ( ${PublicAccess.systemUserId}, 'System1', 'system', ${UserTypeModel.managerUserTypeNumber})
+      , ( ${PublicAccess.adminUserId}, 'Admin', 'admin', ${UserTypeModel.managerUserTypeNumber})
        ON CONFLICT DO NOTHING
       ;''';
 

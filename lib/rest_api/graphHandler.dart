@@ -56,7 +56,7 @@ class GraphHandler {
     PublicAccess.logInDebug(bJSON.toString());
 
     final request = bJSON[Keys.requestZone];
-    final requesterId = int.tryParse(bJSON[Keys.requesterId]);
+    final requesterId = int.tryParse(bJSON[Keys.requesterId]?? '');
     final deviceId = bJSON[Keys.deviceId];
     
     if(deviceId == null) {
@@ -169,6 +169,14 @@ class GraphHandler {
       return getAboutUsData(wrapper);
     }
 
+    if (request == 'set_aid_data') {
+      return setAidData(wrapper);
+    }
+
+    if (request == 'get_aid_data') {
+      return getAidData(wrapper);
+    }
+
 
     return generateResultError(HttpCodes.error_requestNotDefined);
   }
@@ -186,22 +194,40 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not set about us');
     }
 
-    final res = generateResultOk();
-    return res;
+    return generateResultOk();
   }
 
   static Future<Map<String, dynamic>> getAboutUsData(GraphHandlerWrap wrapper) async{
     final r = await CommonMethods.getAboutUsData();
-
-    if(r == null) {
-      return generateResultError(HttpCodes.error_dataNotExist);
-    }
 
     final res = generateResultOk();
     res[Keys.data] = r;
 
     return res;
   }
+
+  static Future<Map<String, dynamic>> setAidData(GraphHandlerWrap wrapper) async{
+    final data = wrapper.bodyJSON[Keys.data];
+
+    final r = await CommonMethods.setAidData(wrapper.userId!, data);
+
+    if(r == null || r < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set aid');
+    }
+
+    return generateResultOk();
+  }
+
+  static Future<Map<String, dynamic>> getAidData(GraphHandlerWrap wrapper) async{
+    final r = await CommonMethods.getAidData();
+
+    final res = generateResultOk();
+    res[Keys.data] = r;
+
+    return res;
+  }
+
+
 
   static Future<Map<String, dynamic>> setUserIsLogoff(HttpRequest req, Map<String, dynamic> js) async{
     final userId = js[Keys.userId];

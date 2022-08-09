@@ -49,7 +49,7 @@ class DbNames {
   static const T_AppVersions = 'app_versions';
   static const T_Advertising = 'advertising';
   //---------------------------------
-  static const T_HtmlHolder = 'Html_holder';
+  static const T_HtmlHolder = 'html_holder';
 
   //... Sequence ...........................................................................
   static const Seq_User = 'user_seq';

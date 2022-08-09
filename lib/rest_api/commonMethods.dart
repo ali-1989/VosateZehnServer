@@ -105,7 +105,7 @@ class CommonMethods {
     return res;
   }
 
-  static Future<int?> setAboutUsData(int userId, String data) async {
+  static Future<int?> setAboutUsData(int userId, String? data) async {
     var where = '''key = 'about_us' ''';
 
     final kv = <String, dynamic>{};
@@ -128,10 +128,39 @@ class CommonMethods {
   }
 
   static Future<String?> getAboutUsData() async {
-    var where = '''SELECT * FROM #T WHERE key = 'about_us' ''';
-    where = where.replaceFirst('#T', DbNames.T_HtmlHolder);
+    var q = '''SELECT * FROM #T WHERE key = 'about_us' ''';
+    q = q.replaceFirst('#T', DbNames.T_HtmlHolder);
 
-    return await PublicAccess.psql2.getColumn(DbNames.T_HtmlHolder, 'data');
+    return await PublicAccess.psql2.getColumn(q, 'data');
+  }
+
+  static Future<int?> setAidData(int userId, String? data) async {
+    var where = '''key = 'aid' ''';
+
+    final kv = <String, dynamic>{};
+    kv['owner_id'] = userId;
+    kv['key'] = 'aid';
+    kv['data'] = data;
+    kv['update_date'] = DateHelper.getNowTimestampToUtc();
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_HtmlHolder, kv, where: where);
+
+    if(cursor is num){
+      return cursor!.toInt();
+    }
+
+    if(cursor is String){
+      return int.parse(cursor!);
+    }
+
+    return null;
+  }
+
+  static Future<String?> getAidData() async {
+    var q = '''SELECT * FROM #T WHERE key = 'aid' ''';
+    q = q.replaceFirst('#T', DbNames.T_HtmlHolder);
+
+    return await PublicAccess.psql2.getColumn(q, 'data');
   }
 
 

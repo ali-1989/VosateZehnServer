@@ -203,7 +203,10 @@ class GraphHandler {
   }
   ///==========================================================================================================
   static Future<Map<String, dynamic>> setUserIsLogoff(GraphHandlerWrap wrap) async{
-    if(wrap.userId == null) {
+    ///for security: check requester be admin or userId == requester
+    dynamic userId = wrap.bodyJSON[Keys.forUserId];
+
+    if(userId == null) {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
@@ -221,10 +224,14 @@ class GraphHandler {
 
   static Future<Map<String, dynamic>> getProfileData(GraphHandlerWrap wrap) async{
     ///for security: check requester be admin or userId == requester
-    final userId = wrap.bodyJSON[Keys.forUserId];
+    dynamic userId = wrap.bodyJSON[Keys.forUserId];
 
     if(userId == null) {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    if(userId is String){
+      userId = int.tryParse(userId);
     }
 
     final res = generateResultOk();

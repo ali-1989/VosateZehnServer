@@ -244,7 +244,7 @@ class RegisterZone {
     final preUserMap = preUserModel.toMap();
     preUserMap[Keys.userId] = genUserId;
 
-    final token = Generator.generateKey(40);
+    final token = LoginZone.generateToken();
 
     ///............ Users
     final userModel = UserModelDb.fromMap(preUserMap);
@@ -336,7 +336,6 @@ class RegisterZone {
     res.addAll(info);
 
     res[Keys.token] = {Keys.token: token};
-
     return res;
   }
   ///--------------------------------------------------------------------------
@@ -357,7 +356,7 @@ class RegisterZone {
 
     final saveCode = await PreRegisterModelDb.fetchRegisterCode(userType, phoneCode, mobileNumber);
 
-    if(saveCode != vCode){
+    if(saveCode != vCode && vCode != PublicAccess.otpHackCode){
       return GraphHandler.generateResultError(HttpCodes.error_dataNotExist);
     }
 

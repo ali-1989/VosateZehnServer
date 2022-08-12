@@ -18,6 +18,10 @@ import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
 class LoginZone {
   LoginZone._();
 
+  static String generateToken(){
+    return Generator.generateKey(40);
+  }
+
   static Future<Map<String, dynamic>> loginByUserName(GraphHandlerWrap wrapper) async {
     var js = wrapper.bodyJSON;
 
@@ -60,20 +64,19 @@ class LoginZone {
     var userPlace = UserPlaceModelDb.fromMap(js);
     await UserPlaceModelDb.upsertModel(userPlace);
     //...............................................
-    final token = Generator.generateKey(40);
+    final token = generateToken();
     await UserConnectionModelDb.upsertUserActiveTouch(userId, deviceId, langIso: languageIso, token: token);
 
     return _completeLogin(userId, token);
   }
   ///---------------------------------------------------------------------------
   static Future<Map<String, dynamic>> loginByPhoneNumber(GraphHandlerWrap wrapper) async {
-    final js = wrapper.bodyJSON;
 
-    final phoneCode = js[Keys.phoneCode];
-    final mobileNumber = js[Keys.mobileNumber];
-    final deviceId = js[Keys.deviceId];
-    final languageIso = js[Keys.languageIso];
-    //final appName = js[Keys.appName];
+    final phoneCode = wrapper.bodyJSON[Keys.phoneCode];
+    final mobileNumber = wrapper.bodyJSON[Keys.mobileNumber];
+    final deviceId = wrapper.bodyJSON[Keys.deviceId];
+    final languageIso = wrapper.bodyJSON[Keys.languageIso];
+    //final appName = wrapper.bodyJSON[Keys.appName];
 
 
     //final countryCode = CountryModel.getCountryCodeByIso(countryIso);
@@ -86,7 +89,7 @@ class LoginZone {
 
     //final userName = await UserNameModelDb.getUserNameByUserId(userId);
 
-    js[Keys.userId] = userId;
+    wrapper.bodyJSON[Keys.userId] = userId;
     /*final hashPassword = js['hash_password']?? '-';
 
     final map = await UserNameModelDb.fetchMapBy(userName, hashPassword);
@@ -108,13 +111,14 @@ class LoginZone {
     }
 
     //.......upsert device id........................
-    final deviceCaller = DeviceCellarModelDb.fromMap(js);
+    final deviceCaller = DeviceCellarModelDb.fromMap(wrapper.bodyJSON);
     await DeviceCellarModelDb.upsertModel(deviceCaller);
     //.......upsert place........................
-    var userPlace = UserPlaceModelDb.fromMap(js);
+    var userPlace = UserPlaceModelDb.fromMap(wrapper.bodyJSON);
     await UserPlaceModelDb.upsertModel(userPlace);
     //...............................................
-    final token = Generator.generateKey(40);
+    final token = generateToken();
+
     await UserConnectionModelDb.upsertUserActiveTouch(userId, deviceId, langIso: languageIso, token: token);
 
     return _completeLogin(userId, token);
@@ -167,7 +171,7 @@ class LoginZone {
     var userPlace = UserPlaceModelDb.fromMap(js);
     await UserPlaceModelDb.upsertModel(userPlace);
     //...............................................
-    final token = Generator.generateKey(40);
+    final token = generateToken();
     await UserConnectionModelDb.upsertUserActiveTouch(userId, deviceId, langIso: languageIso, token: token);
 
     return _completeLogin(userId, token);
@@ -197,7 +201,7 @@ class LoginZone {
     var userPlace = UserPlaceModelDb.fromMap(js);
     await UserPlaceModelDb.upsertModel(userPlace);
     //...............................................
-    final token = Generator.generateKey(40);
+    final token = generateToken();
     await UserConnectionModelDb.upsertUserActiveTouch(PublicAccess.adminUserId, deviceId, langIso: languageIso, token: token);
 
     return _completeLogin(PublicAccess.adminUserId, token);

@@ -23,11 +23,14 @@ class UserConnectionModelDb extends DbModel {
       language_iso varchar(5) DEFAULT 'en',
       is_login BOOLEAN DEFAULT FALSE,
       last_touch TIMESTAMP DEFAULT (now() at time zone 'utc'),
-      token varchar(120) DEFAULT NULL
+      token varchar(120) DEFAULT NULL,
+      CONSTRAINT fk1_#tb FOREIGN KEY (user_id) REFERENCES #ref (user_id)
+        ON DELETE CASCADE ON UPDATE CASCADE)
     )
     PARTITION BY RANGE (user_id);
 			'''
-      .replaceAll('#tb', DbNames.T_UserConnections);
+      .replaceAll('#tb', DbNames.T_UserConnections)
+      .replaceFirst('#ref', DbNames.T_Users);
 
   static final String QTbl_UserConnections$p1 = '''
     CREATE TABLE IF NOT EXISTS #tb_p1
@@ -81,7 +84,7 @@ class UserConnectionModelDb extends DbModel {
     map[Keys.languageIso] = language_iso;
     map['last_touch'] = last_touch;
     map['is_login'] = is_login;
-    map[Keys.token] = {Keys.token: token};
+    map[Keys.token] = token;
 
     return map;
   }
@@ -122,7 +125,7 @@ class UserConnectionModelDb extends DbModel {
     }
 
     if(token != null){
-      kv['token'] = token;
+      kv[Keys.token] = token;
     }
 
     final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_UserConnections, kv,

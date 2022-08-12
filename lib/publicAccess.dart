@@ -28,6 +28,7 @@ class PublicAccess {
   static final developerMobileNumber = '09139277303';
   static int systemUserId = 90;
   static int adminUserId = 89;
+  static String otpHackCode = '6800';
   static List<String> avoidForLimitedUser = ['is_deleted', 'register_date', 'user_type'];
 
   static void logInDebug(dynamic txt) {

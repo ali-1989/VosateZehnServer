@@ -363,6 +363,8 @@ class DatabaseNs {
     await DB.execution(QIndex_AppVersions$version_code);
 
     await DB.execution(QTbl_HtmlHolder);
+
+    await DB.execution(QTbl_SimpleTicket);
   }
 
   static Future prepareFunctions() async{
@@ -825,6 +827,18 @@ class DatabaseNs {
        CONSTRAINT pk_TypeForMessage PRIMARY KEY (key),
        CONSTRAINT uk1_TypeForMessage UNIQUE (caption)
       );''';
+
+  static final String QTbl_SimpleTicket = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id BIGSERIAL,
+       data varchar(2000) DEFAULT NULL,
+       sender_user_id BIGINT DEFAULT NULL,
+       send_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       is_deleted BOOLEAN DEFAULT false,
+       CONSTRAINT pk_#tb PRIMARY KEY (id)
+      )
+      ;
+      '''.replaceAll('#tb', DbNames.T_SimpleTicket);
   //.....................................................................................................
 
   // discount:  num > 0: value | num < 0: percent

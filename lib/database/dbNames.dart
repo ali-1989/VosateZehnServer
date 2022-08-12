@@ -36,6 +36,7 @@ class DbNames {
   static const T_SystemMessageVsBatch = 'systemMessageVsBatch';
   static const T_SystemMessageVsUser = 'systemMessageVsUser';
   static const T_SystemMessageResult = 'systemMessageResult';
+  static const T_SimpleTicket = 'simple_ticket';
   static const T_Ticket = 'ticket';
   static const T_TicketMessageSeen = 'ticket_message_seen';
   static const T_TicketMessage = 'ticket_message';

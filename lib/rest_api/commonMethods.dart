@@ -28,13 +28,13 @@ class CommonMethods {
     return Psql2.castToJsonb(mapOrJs, nullIfNull: nullIfNull);
   }
   ///=====================================================================================================
-  static Future<Map<String, dynamic>> getUserLoginInfo(int userId, bool password) async {
+  static Future<Map<String, dynamic>> getUserLoginInfo(int userId, bool byPassword) async {
     final getDataTypes = <UserDataType>{};
 
     getDataTypes.add(UserDataType.personal);
     getDataTypes.add(UserDataType.country);
     getDataTypes.add(UserDataType.currency);
-    getDataTypes.add(password? UserDataType.userNamePassword : UserDataType.userName);
+    getDataTypes.add(byPassword? UserDataType.userNamePassword : UserDataType.userName);
     getDataTypes.add(UserDataType.mobileNumber);
     getDataTypes.add(UserDataType.email);
     getDataTypes.add(UserDataType.profileImage);
@@ -106,7 +106,7 @@ class CommonMethods {
   }
 
   static Future<int?> setHtmlData(int userId, String key, String? data) async {
-    var where = '''key = '$key' ''';
+    final where = '''key = '$key' ''';
 
     final kv = <String, dynamic>{};
     kv['owner_id'] = userId;
@@ -120,10 +120,6 @@ class CommonMethods {
       return cursor!.toInt();
     }
 
-    if(cursor is String){
-      return int.parse(cursor!);
-    }
-
     return null;
   }
 
@@ -133,6 +129,22 @@ class CommonMethods {
 
     return await PublicAccess.psql2.getColumn(q, 'data');
   }
+
+  static Future<int?> setTicket(int userId, String? data) async {
+    final kv = <String, dynamic>{};
+    kv['sender_user_id'] = userId;
+    kv['data'] = data;
+    //kv['send_date'] = DateHelper.getNowTimestampToUtc();
+
+    final cursor = await PublicAccess.psql2.insertKv(DbNames.T_SimpleTicket, kv,);
+
+    if(cursor is num){
+      return cursor!.toInt();
+    }
+
+    return null;
+  }
+
 
 
 

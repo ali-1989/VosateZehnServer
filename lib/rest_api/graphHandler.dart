@@ -23,6 +23,7 @@ class GraphHandlerWrap {
   late Map<String, dynamic> bodyJSON;
   late String zoneRequest;
   int? userId;
+  String? deviceId;
 }
 ///==========================================================================================================
 class GraphHandler {
@@ -55,9 +56,13 @@ class GraphHandler {
     PublicAccess.logInDebug(bJSON.toString());
 
     final request = bJSON[Keys.requestZone];
-    final requesterId = int.tryParse(bJSON[Keys.requesterId]?? '');
+    dynamic requesterId = bJSON[Keys.requesterId];
     final deviceId = bJSON[Keys.deviceId];
-    
+
+    if(requesterId is String){
+      requesterId = int.tryParse(requesterId);
+    }
+
     if(deviceId == null) {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
@@ -104,6 +109,7 @@ class GraphHandler {
       wrapper.bodyJSON = bJSON;
       wrapper.zoneRequest = request;
       wrapper.userId = requesterId;
+      wrapper.deviceId = deviceId;
 
       return await _process(wrapper);
     }
@@ -156,8 +162,12 @@ class GraphHandler {
       return LoginZone.loginAdmin(wrapper);
     }
 
-    if (request == 'LogoffUserReport') {
-      return setUserIsLogoff(wrapper.request, wrapper.bodyJSON);
+    if (request == 'Logoff_user_report') {
+      return setUserIsLogoff(wrapper);
+    }
+
+    if (request == 'get_profile_data') {
+      return getProfileData(wrapper);
     }
 
     if (request == 'set_about_us_data') {
@@ -176,7 +186,7 @@ class GraphHandler {
       return getAidData(wrapper);
     }
 
-  if (request == 'set_term_data') {
+    if (request == 'set_term_data') {
       return setTermData(wrapper);
     }
 
@@ -184,16 +194,47 @@ class GraphHandler {
       return getTermData(wrapper);
     }
 
+    if (request == 'send_ticket_data') {
+      return setTicketData(wrapper);
+    }
+
 
     return generateResultError(HttpCodes.error_requestNotDefined);
   }
   ///==========================================================================================================
+  static Future<Map<String, dynamic>> setUserIsLogoff(GraphHandlerWrap wrap) async{
+    if(wrap.userId == null) {
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final r = await UserConnectionModelDb.setUserLogoff(wrap.userId!, wrap.deviceId!);
+
+    if(!r) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set user logoff');
+    }
+
+    final res = generateResultOk();
+    res[Keys.userId] = wrap.userId;
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getProfileData(GraphHandlerWrap wrap) async{
+    ///for security: check requester be admin or userId == requester
+    final userId = wrap.bodyJSON[Keys.forUserId];
+
+    if(userId == null) {
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final res = generateResultOk();
+    res.addAll(await CommonMethods.getUserLoginInfo(userId, false));
+
+    return res;
+  }
+
   static Future<Map<String, dynamic>> setAboutUsData(GraphHandlerWrap wrapper) async{
     final data = wrapper.bodyJSON[Keys.data];
-
-    /*if(deviceId == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }*/
 
     final r = await CommonMethods.setHtmlData(wrapper.userId!, 'about_us', data);
 
@@ -255,28 +296,23 @@ class GraphHandler {
     return res;
   }
 
+  static Future<Map<String, dynamic>> setTicketData(GraphHandlerWrap wrapper) async{
+    final data = wrapper.bodyJSON[Keys.data];
 
+    final r = await CommonMethods.setTicket(wrapper.userId!, data);
 
-
-  static Future<Map<String, dynamic>> setUserIsLogoff(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final deviceId = js[Keys.deviceId];
-
-    if(userId == null || deviceId == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final r = await UserConnectionModelDb.setUserLogoff(userId, deviceId);
-
-    if(!r) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set user logoff');
+    if(r == null || r < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set ticket');
     }
 
     final res = generateResultOk();
-    res[Keys.userId] = userId;
 
     return res;
   }
+
+
+
+
 
   static Future<Map<String, dynamic>> deleteProfileAvatar(HttpRequest req, Map<String, dynamic> js) async{
     final userId = js[Keys.userId];

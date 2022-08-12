@@ -11,12 +11,12 @@ import 'package:vosate_zehn_server/database/models/register.dart';
 import 'package:vosate_zehn_server/database/models/ticket.dart';
 import 'package:vosate_zehn_server/database/models/ticketMessage.dart';
 import 'package:vosate_zehn_server/database/models/userCurrency.dart';
+import 'package:vosate_zehn_server/database/models/userMedia.dart';
 import 'package:vosate_zehn_server/database/models/userNotifier.dart';
 import 'package:vosate_zehn_server/database/models/users.dart';
 import 'package:vosate_zehn_server/database/models/userBlockList.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCountry.dart';
-import 'package:vosate_zehn_server/database/models/userImage.dart';
 import 'package:vosate_zehn_server/database/models/userMetaData.dart';
 import 'package:vosate_zehn_server/database/models/userNameId.dart';
 import 'package:vosate_zehn_server/database/models/userPlace.dart';
@@ -274,12 +274,12 @@ class DatabaseNs {
     await DB.execution(UserEmailDb.QIdx_userEmail$email);//idx
     await DB.execution(UserEmailDb.QAltUk1_userEmail$p1);//alter
 
-    await DB.execution(QTbl_TypeForUserImage);
+    await DB.execution(QTbl_MediaType);
 
-    await DB.execution(UserImageModelDb.QTbl_UserImages);
-    await DB.execution(UserImageModelDb.QTbl_UserImages$p1);//part
-    await DB.execution(UserImageModelDb.QTbl_UserImages$p2);//part
-    await DB.execution(UserImageModelDb.QIdx_UserImages$type);//idx
+    await DB.execution(UserMediaModelDb.QTbl_UserImages);
+    await DB.execution(UserMediaModelDb.QTbl_UserImages$p1);//part
+    await DB.execution(UserMediaModelDb.QTbl_UserImages$p2);//part
+    await DB.execution(UserMediaModelDb.QIdx_UserImages$type);//idx
     //await DB.execution(UserImageModelDb.QAltUk1_UserImages$p1);//alter
 
     await DB.execution(QTbl_TypeForMessage);
@@ -379,7 +379,7 @@ class DatabaseNs {
 
   static void setPreData(){
     DB.execution(Q_insert_sexType);
-    DB.execution(Q_insert_imageType);
+    DB.execution(Q_insert_mediaType);
     DB.execution(Q_insert_userMetaType);
     DB.execution(Q_insert_UserSystem);
     DB.execution(Q_insert_UserNameId);
@@ -740,20 +740,20 @@ class DatabaseNs {
  	''';
 
 
-  static final String QTbl_TypeForUserImage = '''
-  CREATE TABLE IF NOT EXISTS ${DbNames.T_TypeForUserImage} (
+  static final String QTbl_MediaType = '''
+  CREATE TABLE IF NOT EXISTS ${DbNames.T_MediaType} (
        key SMALLSERIAL,
        caption VARCHAR(40) NOT NULL,
-       CONSTRAINT pk_TypeForUserImage PRIMARY KEY (key),
-       CONSTRAINT uk1_TypeForUserImage UNIQUE (caption)
+       CONSTRAINT pk_${DbNames.T_MediaType} PRIMARY KEY (key),
+       CONSTRAINT uk1_${DbNames.T_MediaType} UNIQUE (caption)
       );''';
 
 
   //if users count grow in future, create more partition
-  /// this table update on (webSocket request)
+  ///** this table fill by web-socket
   static final String QTbl_DeviceConnections = '''
   CREATE TABLE IF NOT EXISTS ${DbNames.T_DeviceConnections} (
-       device_id varchar(40) NOT NULL,
+       device_id varchar(50) NOT NULL,
        app_name varchar(30) NOT NULL,
        websocket_id varchar(60) DEFAULT NULL,
        language_iso varchar(5) DEFAULT 'en',
@@ -1149,13 +1149,11 @@ class DatabaseNs {
 
 
   //======	preData	=====================================================================
-  static final String Q_insert_imageType = '''
-  INSERT INTO ${DbNames.T_TypeForUserImage} 
+  static final String Q_insert_mediaType = '''
+  INSERT INTO ${DbNames.T_MediaType} 
       ( key,caption)
       values
         ( 1, 'Profile')
-      , ( 2, 'Certificate Face')
-      , ( 3, 'Introduction Face')
        ON CONFLICT DO NOTHING
       ;''';
 

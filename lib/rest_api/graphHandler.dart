@@ -1,12 +1,11 @@
 import 'dart:async';
 import 'package:alfred/alfred.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
-import 'package:vosate_zehn_server/app/pathNs.dart';
 import 'package:vosate_zehn_server/database/models/userBlockList.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCountry.dart';
+import 'package:vosate_zehn_server/database/models/userMedia.dart';
 import 'package:vosate_zehn_server/database/models/users.dart';
-import 'package:vosate_zehn_server/database/models/userImage.dart';
 import 'package:vosate_zehn_server/database/models/userNameId.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
@@ -177,6 +176,14 @@ class GraphHandler {
       return getAidData(wrapper);
     }
 
+  if (request == 'set_term_data') {
+      return setTermData(wrapper);
+    }
+
+    if (request == 'get_term_data') {
+      return getTermData(wrapper);
+    }
+
 
     return generateResultError(HttpCodes.error_requestNotDefined);
   }
@@ -188,7 +195,7 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }*/
 
-    final r = await CommonMethods.setAboutUsData(wrapper.userId!, data);
+    final r = await CommonMethods.setHtmlData(wrapper.userId!, 'about_us', data);
 
     if(r == null || r < 1) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not set about us');
@@ -198,7 +205,7 @@ class GraphHandler {
   }
 
   static Future<Map<String, dynamic>> getAboutUsData(GraphHandlerWrap wrapper) async{
-    final r = await CommonMethods.getAboutUsData();
+    final r = await CommonMethods.getHtmlData('about_us');
 
     final res = generateResultOk();
     res[Keys.data] = r;
@@ -209,7 +216,7 @@ class GraphHandler {
   static Future<Map<String, dynamic>> setAidData(GraphHandlerWrap wrapper) async{
     final data = wrapper.bodyJSON[Keys.data];
 
-    final r = await CommonMethods.setAidData(wrapper.userId!, data);
+    final r = await CommonMethods.setHtmlData(wrapper.userId!, 'aid', data);
 
     if(r == null || r < 1) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not set aid');
@@ -219,13 +226,35 @@ class GraphHandler {
   }
 
   static Future<Map<String, dynamic>> getAidData(GraphHandlerWrap wrapper) async{
-    final r = await CommonMethods.getAidData();
+    final r = await CommonMethods.getHtmlData('aid');
 
     final res = generateResultOk();
     res[Keys.data] = r;
 
     return res;
   }
+
+  static Future<Map<String, dynamic>> setTermData(GraphHandlerWrap wrapper) async{
+    final data = wrapper.bodyJSON[Keys.data];
+
+    final r = await CommonMethods.setHtmlData(wrapper.userId!, 'term', data);
+
+    if(r == null || r < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set term');
+    }
+
+    return generateResultOk();
+  }
+
+  static Future<Map<String, dynamic>> getTermData(GraphHandlerWrap wrapper) async{
+    final r = await CommonMethods.getHtmlData('term');
+
+    final res = generateResultOk();
+    res[Keys.data] = r;
+
+    return res;
+  }
+
 
 
 
@@ -256,7 +285,7 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    final del = await UserImageModelDb.deleteProfileImage(userId, 1);
+    final del = await UserMediaModelDb.deleteProfileImage(userId, 1);
 
     if(!del) {
       return generateResultError(HttpCodes.error_databaseError , cause: 'Not delete from[UserImages]');
@@ -725,7 +754,7 @@ class GraphHandler {
     return res;
   }
 
-  static Future<Map<String, dynamic>> changeAdvertisingPhoto(HttpRequest req, Map<String, dynamic> js) async{
+  /*static Future<Map<String, dynamic>> changeAdvertisingPhoto(HttpRequest req, Map<String, dynamic> js) async{
     final requesterId = js[Keys.requesterId];
     final advId = js['advertising_id'];
     final fileName = js[Keys.fileName];
@@ -837,5 +866,5 @@ class GraphHandler {
     final res = generateResultOk();
 
     return res;
-  }
+  }*/
 }

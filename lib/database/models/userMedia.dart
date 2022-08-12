@@ -8,11 +8,16 @@ import 'package:vosate_zehn_server/publicAccess.dart';
 
 /// note: insert relative path no full path [for where]
 
-class UserImageModelDb extends DbModel {
+class UserMediaModelDb extends DbModel {
   int? id;
   late int user_id;
   late int type;
-  String? imagePath;
+  String? mediaPath;
+  String? name;
+  String? extension;
+  double? volume;
+  double? width;
+  double? height;
   String? date;
 
   //type:
@@ -24,8 +29,13 @@ class UserImageModelDb extends DbModel {
        id BIGSERIAL NOT NULL,
        user_id BIGINT NOT NULL,
        type SMALLINT NOT NULL,
-       image_path varchar(400) NOT NULL,
-       date_of TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       media_path varchar(400) NOT NULL,
+       name varchar(100) DEFAULT NULL,
+       extension varchar(10) DEFAULT NULL,
+       volume INT DEFAULT NULL,
+       width INT DEFAULT NULL,
+       height INT DEFAULT NULL,
+       insert_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
        CONSTRAINT fk1_#tb FOREIGN KEY (user_id) REFERENCES #ref (user_id)
       		ON DELETE CASCADE ON UPDATE CASCADE,
        CONSTRAINT fk2_#tb FOREIGN KEY (type) REFERENCES #ref2 (Key)
@@ -33,27 +43,27 @@ class UserImageModelDb extends DbModel {
       )
       PARTITION BY RANGE (user_id);
 			'''
-      .replaceAll('#tb', DbNames.T_UserImages)
+      .replaceAll('#tb', DbNames.T_UserMedia)
       .replaceFirst('#ref', DbNames.T_Users)
-      .replaceFirst('#ref2', DbNames.T_TypeForUserImage);
+      .replaceFirst('#ref2', DbNames.T_MediaType);
 
   static final String QIdx_UserImages$type = '''
 		CREATE INDEX IF NOT EXISTS #tb_type_idx ON #tb
 		USING BTREE (type);
 		'''
-      .replaceAll('#tb', DbNames.T_UserImages);
+      .replaceAll('#tb', DbNames.T_UserMedia);
 
   static final String QTbl_UserImages$p1 = '''
       CREATE TABLE IF NOT EXISTS #tb_p1
       PARTITION OF #tb FOR VALUES FROM (0) TO (250000);
       '''
-      .replaceAll('#tb', DbNames.T_UserImages);
+      .replaceAll('#tb', DbNames.T_UserMedia);
 
   static final String QTbl_UserImages$p2 = '''
       CREATE TABLE IF NOT EXISTS #tb_p2
       PARTITION OF #tb FOR VALUES FROM (250000) TO (500000);
       '''
-      .replaceAll('#tb', DbNames.T_UserImages);
+      .replaceAll('#tb', DbNames.T_UserMedia);
 
   /* no need unique
   static final String QAltUk1_UserImages$p1 = '''
@@ -63,7 +73,7 @@ class UserImageModelDb extends DbModel {
        ELSE RAISE EXCEPTION '> %', SQLERRM;
         END IF; END \$\$;
 		'''
-      .replaceAll('#tb', DbNames.T_UserImages);
+      .replaceAll('#tb', DbNames.T_UserMedia);
 
   static final String QAltUk1_UserImages$p2 = '''
 		DO \$\$ BEGIN ALTER TABLE #tb_p2
@@ -72,55 +82,64 @@ class UserImageModelDb extends DbModel {
        ELSE RAISE EXCEPTION '> %', SQLERRM;
         END IF; END \$\$;
 		'''
-      .replaceAll('#tb', DbNames.T_UserImages);*/
+      .replaceAll('#tb', DbNames.T_UserMedia);*/
 
 
-  UserImageModelDb();
+  UserMediaModelDb();
 
   @override
-  UserImageModelDb.fromMap(Map map) : super.fromMap(map) {
-    id = map[Keys.id]?? map[Keys.profileImageId];
+  UserMediaModelDb.fromMap(Map map) : super.fromMap(map) {
+    id = map[Keys.id];
     user_id = map[Keys.userId];
     type = map[Keys.type];
-    imagePath = map[Keys.imagePath];
-    date = map['date_of'];
+    mediaPath = map[Keys.mediaPath];
+    name = map[Keys.name];
+    extension = map['extension'];
+    volume = map['volume'];
+    width = map['width'];
+    height = map['height'];
+    date = map[Keys.date];
   }
 
   @override
   Map<String, dynamic> toMap() {
     final map = <String, dynamic>{};
 
+    map[Keys.id] = id;
     map[Keys.userId] = user_id;
     map[Keys.type] = type;
-    map[Keys.imagePath] = imagePath;
-    map['date_of'] = date;
+    map[Keys.mediaPath] = mediaPath;
+    map[Keys.name] = name;
+    map['extension'] = extension;
+    map['volume'] = volume;
+    map['width'] = width;
+    map['height'] = height;
 
     if(id != null) {
-      if (type == 1) {
-        map[Keys.profileImageId] = id;
-      }
-      else {
-        map[Keys.id] = id;
-      }
+      map[Keys.id] = id;
+    }
+
+    if(date != null) {
+      map[Keys.date] = date;
     }
 
     return map;
   }
 
   void changePathForClient(){
-    if(imagePath != null) {
-      imagePath = PathsNs.genUrlDomainFromLocalPathByDecoding(PublicAccess.domain, PathsNs.getCurrentPath(), imagePath!);
+    if(mediaPath != null) {
+      mediaPath = PathsNs.genUrlDomainFromLocalPathByDecoding(PublicAccess.domain, PathsNs.getCurrentPath(), mediaPath!);
     }
   }
 
   void changePathForDb(){
-    if(imagePath != null) {
-      imagePath = PathsNs.encodeFilePathForDataBase(imagePath!);
+    if(mediaPath != null) {
+      mediaPath = PathsNs.encodeFilePathForDataBase(mediaPath!);
     }
   }
 
   static Future<Map<String, dynamic>?> fetchFirst(int userId, int type) async {
-    final q = '''SELECT * FROM ${DbNames.T_UserImages} WHERE user_id = $userId AND type = $type;''';
+    final q = '''SELECT * FROM ${DbNames.T_UserMedia} WHERE user_id = $userId AND type = $type;''';
     final cursor = await PublicAccess.psql2.queryCall(q);
 
     if (cursor == null || cursor.isEmpty) {
@@ -131,7 +150,7 @@ class UserImageModelDb extends DbModel {
   }
 
   static Future<List<Map<String, dynamic>?>> fetch(int userId, int type) async {
-    final q = '''SELECT * FROM ${DbNames.T_UserImages} WHERE user_id = $userId AND type = $type;''';
+    final q = '''SELECT * FROM ${DbNames.T_UserMedia} WHERE user_id = $userId AND type = $type;''';
     final cursor = await PublicAccess.psql2.queryCall(q);
 
     if (cursor == null || cursor.isEmpty) {
@@ -143,17 +162,20 @@ class UserImageModelDb extends DbModel {
     }).toList();
   }
 
-  static Future<bool> upsertUserImage(int userId, int type, String rawPath) async{
-    final q = 'SELECT image_path FROM ${DbNames.T_UserImages} WHERE user_id = $userId AND type = $type;';
-    final oldPath = await PublicAccess.psql2.getColumn(q, 'image_path');
+  static Future<bool> upsert(int userId, int type, String rawPath, int? volume) async{
+    final q = 'SELECT media_path FROM ${DbNames.T_UserMedia} WHERE user_id = $userId AND type = $type;';
+    final oldPath = await PublicAccess.psql2.getColumn(q, 'media_path');
 
     final value = [
       userId,
       type,
-      PathsNs.encodeFilePathForDataBaseRelative(rawPath)
+      PathsNs.encodeFilePathForDataBaseRelative(rawPath),
+      volume
     ];
 
-    final x = await PublicAccess.psql2.upsertWhere(DbNames.T_UserImages, ['user_id', 'type', 'image_path'], value,
+    final x = await PublicAccess.psql2.upsertWhere(DbNames.T_UserMedia,
+        ['user_id', 'type', 'media_path', 'volume'],
+        value,
         where: ' type = $type AND user_id = $userId');
 
     if(x != null && x > 0) {
@@ -168,22 +190,23 @@ class UserImageModelDb extends DbModel {
     return false;
   }
 
-  static Future<bool> addUserImage(int userId, int type, String rawPath) async{
+  static Future<bool> addUserImage(int userId, int type, String rawPath, int? volume) async{
     final value = [
       userId,
       type,
-      PathsNs.encodeFilePathForDataBaseRelative(rawPath)
+      PathsNs.encodeFilePathForDataBaseRelative(rawPath),
+      volume,
     ];
 
-    final x = await PublicAccess.psql2.insert(DbNames.T_UserImages, ['user_id', 'type', 'image_path'], value);
+    final x = await PublicAccess.psql2.insert(DbNames.T_UserMedia, ['user_id', 'type', 'media_path', 'volume'], value);
     return x != null && x > 0;
   }
 
-  static Future<bool> deleteUserImageByType(int userId, int type) async {
-    final q = 'SELECT image_path FROM ${DbNames.T_UserImages} WHERE user_id = $userId AND type = $type;';
-    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'image_path');
+  static Future<bool> deleteMediaByType(int userId, int type) async {
+    final q = 'SELECT media_path FROM ${DbNames.T_UserMedia} WHERE user_id = $userId AND type = $type;';
+    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'media_path');
 
-    final x = await PublicAccess.psql2.delete(DbNames.T_UserImages, 'user_id = $userId AND type = $type');
+    final x = await PublicAccess.psql2.delete(DbNames.T_UserMedia, 'user_id = $userId AND type = $type');
 
     if(x != null && x > 0){
       if(!TextHelper.isEmptyOrNull(oldRelPath)) {
@@ -200,19 +223,19 @@ class UserImageModelDb extends DbModel {
     return false;
   }
 
-  static Future<bool> deleteUserImageByUrl(int userId, int type, String url) async{
-    var deCode = UrlHelper.decodeUrl(url)!;
+  static Future<bool> deleteMediaByUrl(int userId, int type, String url) async{
+    final deCode = UrlHelper.decodeUrl(url)!;
 
     var relPath = UrlHelper.removeDomain(deCode)!;
     relPath = UrlHelper.encodeUrl(relPath)!;
 
-    final where = "user_id = $userId AND type = $type AND image_path = '$relPath'";
+    final where = "user_id = $userId AND type = $type AND media_path = '$relPath'";
 
-    final q = 'SELECT image_path FROM ${DbNames.T_UserImages} WHERE $where;';
+    final q = 'SELECT media_path FROM ${DbNames.T_UserMedia} WHERE $where;';
 
-    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'image_path');
+    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'media_path');
 
-    final x = await PublicAccess.psql2.delete(DbNames.T_UserImages, where);
+    final x = await PublicAccess.psql2.delete(DbNames.T_UserMedia, where);
 
     if(x != null && x > 0){
       if(!TextHelper.isEmptyOrNull(oldRelPath)) {
@@ -229,13 +252,13 @@ class UserImageModelDb extends DbModel {
     return false;
   }
 
-  static Future<bool> deleteUserImageByDate(int userId, int type, String date) async{
-    final where = "user_id = $userId AND type = $type AND date_of = '$date'";
+  static Future<bool> deleteMediaByDate(int userId, int type, String date) async{
+    final where = "user_id = $userId AND type = $type AND insert_date = '$date'";
 
-    final q = 'SELECT image_path FROM ${DbNames.T_UserImages} WHERE $where;';
-    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'image_path');
+    final q = 'SELECT media_path FROM ${DbNames.T_UserMedia} WHERE $where;';
+    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'media_path');
 
-    final x = await PublicAccess.psql2.delete(DbNames.T_UserImages, where);
+    final x = await PublicAccess.psql2.delete(DbNames.T_UserMedia, where);
 
     if(x != null && x > 0){
       if(!TextHelper.isEmptyOrNull(oldRelPath)) {
@@ -252,49 +275,40 @@ class UserImageModelDb extends DbModel {
     return false;
   }
   //-----------------------------------------------------------------------------------------------
-  Map<String, dynamic> _toMapForClient() {
+  /*Map<String, dynamic> _toMapForClient() {
     final res = <String, dynamic>{};
 
     res[Keys.userId] = user_id;
-    res[Keys.profileImageUrl] = imagePath;
+    res[Keys.profileImageUrl] = mediaPath;
 
     return res;
-  }
+  }*/
 
   static Future<Map<String, dynamic>?> fetchProfileImageMap(int userId) async {
-    final map = await UserImageModelDb.fetchFirst(userId, 1);
-
-    if (map == null) {
-      return null;
-    }
-
-    return map;
-    //var res = UserImageDbModel.fromMap(m as Map<String, dynamic>);
-    //res.changePathForClient();
-    //return res.toMapForClient();
+    return await UserMediaModelDb.fetchFirst(userId, 1);
   }
 
   static Future<Map<String, dynamic>> getProfileImage(int userId) async {
-    final map = await UserImageModelDb.fetchProfileImageMap(userId);
+    final map = await UserMediaModelDb.fetchProfileImageMap(userId);
 
     if (map == null) {
       return <String, dynamic>{};
     }
 
-    var res = UserImageModelDb.fromMap(map);
-    res.changePathForClient();
+    final model = UserMediaModelDb.fromMap(map);
+    model.changePathForClient();
 
-    /*var res = <String, String?>{};
-    res['profile_image_uri'] = image_path;*/
+    final res = model.toMap();
+    res[Keys.url] = model.mediaPath;
 
-    return res._toMapForClient();
+    return res;
   }
 
   static Future<bool> deleteProfileImage(int userId, int type) async {
-    final q = 'SELECT image_path FROM ${DbNames.T_UserImages} WHERE user_id = $userId AND type = $type;';
-    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'image_path');
+    final q = 'SELECT media_path FROM ${DbNames.T_UserMedia} WHERE user_id = $userId AND type = $type;';
+    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'media_path');
 
-    final x = await PublicAccess.psql2.delete(DbNames.T_UserImages,' type = $type AND user_id = $userId');
+    final x = await PublicAccess.psql2.delete(DbNames.T_UserMedia,' type = $type AND user_id = $userId');
 
     if(x != null && x > 0) {
       if(!TextHelper.isEmptyOrNull(oldRelPath)) {

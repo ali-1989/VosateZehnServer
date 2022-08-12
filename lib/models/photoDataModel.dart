@@ -6,7 +6,7 @@ import 'package:vosate_zehn_server/keys.dart';
 class PhotoDataModel {
   late String id;
   DateTime? utcDate;
-  String? uri;
+  String? url;
   String? path;
   int order = 0;
   String? description;
@@ -23,8 +23,8 @@ class PhotoDataModel {
 
     id = map[Keys.id];
     utcDate = DateHelper.tsToSystemDate(map[Keys.date]); //is utc
-    uri = map[Keys.imageUri];
-    path = map[Keys.imagePath];
+    url = map[Keys.url];
+    path = map[Keys.mediaPath];
     order = map[Keys.orderNum]?? 0;
     description = map[Keys.description];
   }
@@ -34,8 +34,8 @@ class PhotoDataModel {
 
     map[Keys.id] = id;
     map[Keys.date] = DateHelper.toTimestampNullable(utcDate);
-    map[Keys.imageUri] = uri;
-    map[Keys.imagePath] = path;
+    map[Keys.url] = url;
+    map[Keys.mediaPath] = path;
     map[Keys.orderNum] = order;
     map[Keys.description] = description;
 
@@ -44,7 +44,7 @@ class PhotoDataModel {
 
   @override
   String toString() {
-    return '$uri , $path , date:$utcDate';
+    return '$url , $path , date:$utcDate';
   }
 
   static void sort(List<PhotoDataModel> list, {bool asc = true}){

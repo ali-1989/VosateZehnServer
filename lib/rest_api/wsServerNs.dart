@@ -155,7 +155,12 @@ class WsServerNs {
 
     if(multiUsers != null && multiUsers.isNotEmpty){
       for(var i=0; i < multiUsers.length; i++){
-        final userId = multiUsers.elementAt(i);
+        dynamic userId = multiUsers.elementAt(i);
+
+        if(userId is String){
+          userId = int.tryParse(userId);
+        }
+
         handlerUserData(js, ws, wsId, userId, deviceId, appVersionCode);
       }
     }

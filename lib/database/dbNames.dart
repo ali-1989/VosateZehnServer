@@ -28,9 +28,9 @@ class DbNames {
   static const T_UserMetaData = 'user_metaData';
   static const T_MobileNumber = 'mobile_number';
   static const T_UserEmail = 'user_email';
-  static const T_TypeForUserImage = 'type_for_user_image';
-  static const T_UserImages = 'user_images';
-  static const T_DeviceConnections = 'device_connections';
+  static const T_MediaType = 'media_type';
+  static const T_UserMedia = 'user_media';
+  static const T_DeviceConnections = 'device_connections'; //fill by web-socket
   static const T_UserConnections = 'user_connections';
   static const T_SystemMessageVsCommon = 'systemMessageVsCommon';
   static const T_SystemMessageVsBatch = 'systemMessageVsBatch';

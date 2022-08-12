@@ -18,12 +18,12 @@ class UserConnectionModelDb extends DbModel {
   static final String QTbl_UserConnections = '''
 		CREATE TABLE IF NOT EXISTS #tb(
 			user_id BIGINT NOT NULL,
-      device_id varchar(40) NOT NULL,
+      device_id varchar(50) NOT NULL,
       websocket_id varchar(60) DEFAULT NULL,
       language_iso varchar(5) DEFAULT 'en',
       is_login BOOLEAN DEFAULT FALSE,
       last_touch TIMESTAMP DEFAULT (now() at time zone 'utc'),
-      token varchar(40) DEFAULT NULL
+      token varchar(120) DEFAULT NULL
     )
     PARTITION BY RANGE (user_id);
 			'''

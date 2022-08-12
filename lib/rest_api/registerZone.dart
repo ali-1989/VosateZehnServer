@@ -244,6 +244,8 @@ class RegisterZone {
     final preUserMap = preUserModel.toMap();
     preUserMap[Keys.userId] = genUserId;
 
+    final token = Generator.generateKey(40);
+
     ///............ Users
     final userModel = UserModelDb.fromMap(preUserMap);
 
@@ -280,7 +282,7 @@ class RegisterZone {
       return GraphHandler.generateResultError(HttpCodes.error_databaseError, cause: 'Insert UserNameId Error');
     }
 
-    ///............ mobile
+    ///................. mobile
     if(byEmail){
       final userEmail = UserEmailDb();
       userEmail.email = email;
@@ -309,15 +311,14 @@ class RegisterZone {
       }
     }
 
-    ///............ country
+    ///................ country
     var country = UserCountryModelDb.fromMap(preUserMap);
     x = await UserCountryModelDb.insertModel(country);
 
     if(!byEmail) {
       await PreRegisterModelDb.deleteRecordByMobile(preUserModel.phoneCode!, preUserModel.mobileNumber!);
     }
-
-    final token = Generator.generateKey(40);
+    ///................. UserConnection
     final uc = UserConnectionModelDb();
 
     uc.user_id = genUserId;
@@ -327,6 +328,7 @@ class RegisterZone {
     uc.token = token;
 
     await UserConnectionModelDb.upsertModel(uc);
+    ///......................
 
     final res = GraphHandler.generateResultOk();
 

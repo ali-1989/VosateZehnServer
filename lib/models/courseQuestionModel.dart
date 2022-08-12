@@ -199,7 +199,7 @@ class CourseQuestionModel {
 
     if(ph != null){
       ph.path = '';
-      ph.uri = PathsNs.genUrlDomainFromFilePath(PublicAccess.domain, PathsNs.getCurrentPath(), file.path);
+      ph.url = PathsNs.genUrlDomainFromFilePath(PublicAccess.domain, PathsNs.getCurrentPath(), file.path);
     }
   }
 }

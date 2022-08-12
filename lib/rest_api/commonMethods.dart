@@ -9,9 +9,9 @@ import 'package:vosate_zehn_server/database/models/emailModel.dart';
 import 'package:vosate_zehn_server/database/models/mobileNumber.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCurrency.dart';
+import 'package:vosate_zehn_server/database/models/userMedia.dart';
 import 'package:vosate_zehn_server/database/models/users.dart';
 import 'package:vosate_zehn_server/database/models/userCountry.dart';
-import 'package:vosate_zehn_server/database/models/userImage.dart';
 import 'package:vosate_zehn_server/database/models/userNameId.dart';
 import 'package:vosate_zehn_server/database/queryList.dart';
 import 'package:vosate_zehn_server/database/querySelector.dart';
@@ -94,7 +94,7 @@ class CommonMethods {
       }
 
       if(type == UserDataType.profileImage) {
-        res.addAll((await UserImageModelDb.getProfileImage(userId)));
+        res['profile_image_model'] = (await UserMediaModelDb.getProfileImage(userId));
       }
 
       if(type == UserDataType.lastTouch) {
@@ -105,12 +105,12 @@ class CommonMethods {
     return res;
   }
 
-  static Future<int?> setAboutUsData(int userId, String? data) async {
-    var where = '''key = 'about_us' ''';
+  static Future<int?> setHtmlData(int userId, String key, String? data) async {
+    var where = '''key = '$key' ''';
 
     final kv = <String, dynamic>{};
     kv['owner_id'] = userId;
-    kv['key'] = 'about_us';
+    kv['key'] = key;
     kv['data'] = data;
     kv['update_date'] = DateHelper.getNowTimestampToUtc();
 
@@ -127,41 +127,14 @@ class CommonMethods {
     return null;
   }
 
-  static Future<String?> getAboutUsData() async {
-    var q = '''SELECT * FROM #T WHERE key = 'about_us' ''';
+  static Future<String?> getHtmlData(String key) async {
+    var q = '''SELECT * FROM #T WHERE key = '$key' ''';
     q = q.replaceFirst('#T', DbNames.T_HtmlHolder);
 
     return await PublicAccess.psql2.getColumn(q, 'data');
   }
 
-  static Future<int?> setAidData(int userId, String? data) async {
-    var where = '''key = 'aid' ''';
 
-    final kv = <String, dynamic>{};
-    kv['owner_id'] = userId;
-    kv['key'] = 'aid';
-    kv['data'] = data;
-    kv['update_date'] = DateHelper.getNowTimestampToUtc();
-
-    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_HtmlHolder, kv, where: where);
-
-    if(cursor is num){
-      return cursor!.toInt();
-    }
-
-    if(cursor is String){
-      return int.parse(cursor!);
-    }
-
-    return null;
-  }
-
-  static Future<String?> getAidData() async {
-    var q = '''SELECT * FROM #T WHERE key = 'aid' ''';
-    q = q.replaceFirst('#T', DbNames.T_HtmlHolder);
-
-    return await PublicAccess.psql2.getColumn(q, 'data');
-  }
 
 
 

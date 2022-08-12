@@ -17,7 +17,7 @@ class UserPlaceModelDb extends DbModel {
   static final String QTbl_UserPlace = '''
 		CREATE TABLE IF NOT EXISTS #tb (
       user_id BIGINT NOT NULL,
-      device_id varchar(40) NOT NULL,
+      device_id varchar(50) NOT NULL,
       country_iso varchar(3) DEFAULT NULL,
       timezone_offset INT DEFAULT 0,
       city_name varchar(70) DEFAULT NULL,
@@ -93,9 +93,12 @@ class UserPlaceModelDb extends DbModel {
     map['city_name'] = city_name;
     map['timezone_offset'] = timezone_offset;
     map[Keys.countryIso] = country_iso;
-    map['register_date'] = register_date;
     map['latitude'] = latitude;
     map['longitude'] = longitude;
+
+    if(register_date != null){
+      map['register_date'] = register_date;
+    }
 
     return map;
   }

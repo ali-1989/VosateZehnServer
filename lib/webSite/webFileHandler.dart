@@ -12,6 +12,7 @@ class WebFileHandler {
   WebFileHandler._();
 
   static final staticPath = PathHelper.resolvePath('${PathsNs.getCurrentPath()}/www/')!;
+  static final staticPathPublic = '$staticPath/public/';
   static RegExp rangeRex = RegExp(r'^bytes=\s*\d*-\d*(,\d*-\d*)*$');
 
   static FutureOr fileResponse(HttpRequest req, HttpResponse res) async {
@@ -24,8 +25,15 @@ class WebFileHandler {
 
     var path = staticPath + fileName;
 
-    final file = File(path);
-    final exist = await file.exists();
+    var file = File(path);
+    var exist = await file.exists();
+
+    if(!exist){
+      path = staticPathPublic + fileName;
+
+      file = File(path);
+      exist = await file.exists();
+    }
 
     if(exist){
       var modifier = await file.lastModified();

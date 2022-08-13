@@ -43,16 +43,19 @@ class Keys {
   static const mobileNumber = 'mobile_number';
   static const phoneCode = 'phone_code';
   static const languageIso = 'language_iso';
+  static const dataList = 'data_list';
+  static const isAsc = 'is_asc_order';
   static const countryIso = 'country_iso';
   static const mediaPath = 'media_path';
+  static const media = 'media';
   static const path = 'path';
   static const uri = 'uri';
   static const url = 'url';
   static const id = 'id';
   static const description = 'description';
-  static const orderNum = 'order_num';
+  static const lower = 'lower';
+  static const upper = 'upper';
   static const nodeName = 'node_name';
   static const extraJs = 'extra_js';
-  static const isChat = 'isChat';
 
 }

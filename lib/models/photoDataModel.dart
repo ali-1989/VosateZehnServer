@@ -25,7 +25,7 @@ class PhotoDataModel {
     utcDate = DateHelper.tsToSystemDate(map[Keys.date]); //is utc
     url = map[Keys.url];
     path = map[Keys.mediaPath];
-    order = map[Keys.orderNum]?? 0;
+    //order = map[Keys.orderNum]?? 0;
     description = map[Keys.description];
   }
 
@@ -36,7 +36,7 @@ class PhotoDataModel {
     map[Keys.date] = DateHelper.toTimestampNullable(utcDate);
     map[Keys.url] = url;
     map[Keys.mediaPath] = path;
-    map[Keys.orderNum] = order;
+    //map[Keys.orderNum] = order;
     map[Keys.description] = description;
 
     return map;

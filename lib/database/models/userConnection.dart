@@ -25,7 +25,7 @@ class UserConnectionModelDb extends DbModel {
       last_touch TIMESTAMP DEFAULT (now() at time zone 'utc'),
       token varchar(120) DEFAULT NULL,
       CONSTRAINT fk1_#tb FOREIGN KEY (user_id) REFERENCES #ref (user_id)
-        ON DELETE CASCADE ON UPDATE CASCADE)
+        ON DELETE CASCADE ON UPDATE CASCADE
     )
     PARTITION BY RANGE (user_id);
 			'''

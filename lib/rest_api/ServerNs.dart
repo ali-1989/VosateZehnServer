@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:alfred/alfred.dart';
 import 'package:assistance_kit/dateSection/dateHelper.dart';
 import 'package:vosate_zehn_server/app/pathNs.dart';
-import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/fileHandler.dart';
 import 'package:vosate_zehn_server/rest_api/managementResponse.dart';
@@ -115,7 +114,7 @@ class ServerNs {
     var base;
     var today = DateHelper.todayUtcDirectoryName();
 
-    if(req.store.get(Keys.isChat) != null) {
+    if(req.store.get('chat') != null) {
       base = PathsNs.getChatFileDir() + Platform.pathSeparator + today + Platform.pathSeparator;
     }
     else {

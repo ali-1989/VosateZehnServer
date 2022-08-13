@@ -12,6 +12,7 @@ import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/ServerNs.dart';
 import 'package:vosate_zehn_server/rest_api/adminCommands.dart';
 import 'package:vosate_zehn_server/rest_api/commonMethods.dart';
+import 'package:vosate_zehn_server/rest_api/fakeAndHack.dart';
 import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
 import 'package:vosate_zehn_server/rest_api/loginZone.dart';
 import 'package:vosate_zehn_server/rest_api/registerZone.dart';
@@ -198,6 +199,14 @@ class GraphHandler {
       return setTicketData(wrapper);
     }
 
+    if (request == 'get_level1_data') {
+      return getLevel1Data(wrapper);
+    }
+
+    if (request == 'get_level2_data') {
+      return getLevel2Data(wrapper);
+    }
+
 
     return generateResultError(HttpCodes.error_requestNotDefined);
   }
@@ -313,6 +322,44 @@ class GraphHandler {
     }
 
     final res = generateResultOk();
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getLevel1Data(GraphHandlerWrap wrapper) async{
+    final key = wrapper.bodyJSON[Keys.key];
+
+    if(key == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    /*final r = await CommonMethods.setTicket(wrapper.userId!, data);
+
+    if(r == null || r < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set ticket');
+    }*/
+
+    final res = generateResultOk();
+    res.addAll(FakeAndHack.simulate_getLevel1(wrapper));
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getLevel2Data(GraphHandlerWrap wrapper) async{
+    final modelId = wrapper.bodyJSON[Keys.id];
+
+    if(modelId == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    /*final r = await CommonMethods.setTicket(wrapper.userId!, data);
+
+    if(r == null || r < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set ticket');
+    }*/
+
+    final res = generateResultOk();
+    res.addAll(FakeAndHack.simulate_getLevel2(wrapper));
 
     return res;
   }

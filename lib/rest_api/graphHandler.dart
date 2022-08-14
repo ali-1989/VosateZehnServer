@@ -187,6 +187,14 @@ class GraphHandler {
       return getAidData(wrapper);
     }
 
+    if (request == 'set_aid_dialog_data') {
+      return setAidData(wrapper);
+    }
+
+    if (request == 'get_aid_dialog_data') {
+      return getAidDialogData(wrapper);
+    }
+
     if (request == 'set_term_data') {
       return setTermData(wrapper);
     }
@@ -205,6 +213,10 @@ class GraphHandler {
 
     if (request == 'get_level2_data') {
       return getLevel2Data(wrapper);
+    }
+
+    if (request == 'get_level2_content_data') {
+      return getLevel2ContentData(wrapper);
     }
 
 
@@ -291,6 +303,15 @@ class GraphHandler {
     return res;
   }
 
+  static Future<Map<String, dynamic>> getAidDialogData(GraphHandlerWrap wrapper) async{
+    final r = await CommonMethods.getHtmlData('aid');
+
+    final res = generateResultOk();
+    res[Keys.data] = r;
+
+    return res;
+  }
+
   static Future<Map<String, dynamic>> setTermData(GraphHandlerWrap wrapper) async{
     final data = wrapper.bodyJSON[Keys.data];
 
@@ -360,6 +381,25 @@ class GraphHandler {
 
     final res = generateResultOk();
     res.addAll(FakeAndHack.simulate_getLevel2(wrapper));
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getLevel2ContentData(GraphHandlerWrap wrapper) async{
+    final level2Id = wrapper.bodyJSON[Keys.id];
+
+    if(level2Id == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    /*final r = await CommonMethods.setTicket(wrapper.userId!, data);
+
+    if(r == null || r < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set ticket');
+    }*/
+
+    final res = generateResultOk();
+    res.addAll(FakeAndHack.simulate_getLevel2Content(wrapper));
 
     return res;
   }

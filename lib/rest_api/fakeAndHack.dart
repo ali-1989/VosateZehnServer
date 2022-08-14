@@ -96,6 +96,7 @@ class FakeAndHack {
     for(var i=0; i<max/2; i++){
       final itm = {};
 
+      itm['id'] = Generator.generateIntId(10);
       itm['title'] = 'فیلم مدیتیشن ' + Generator.generateKey(2);
       //v1.description = 'کلیپ های کوتاه و کاربردی یرای درک';
       itm['description'] = 'درک رسیدن به آرامش با تماشای کلیپ های علمی و  درک رسیدن به آرامش با تماشای کلیپ  شای کلیپ های علمی و کاربردی یکاربردی های علمی و کاربردی یکاربردی یرای درک';
@@ -104,6 +105,7 @@ class FakeAndHack {
       itm['date'] = DateHelper.getNowTimestamp();
       itm['type'] = 1;
       itm['url'] = 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4';
+      itm['duration'] = 1580652;
 
       res.add(itm);
     }
@@ -111,6 +113,7 @@ class FakeAndHack {
     for(var i=0; i<max/2; i++){
       final itm = {};
 
+      itm['id'] = Generator.generateIntId(10);
       itm['title'] = 'صوت ' + Generator.generateKey(2);
       itm['description'] = 'درک رسیدن به آرامش با تماشای کلیپ های علمی و  درک رسیدن به آرامش با تماشای کلیپ  شای کلیپ های علمی و کاربردی یکاربردی های علمی و کاربردی یکاربردی یرای درک';
 
@@ -118,12 +121,14 @@ class FakeAndHack {
       itm['date'] = DateHelper.getNowTimestamp();
       itm['type'] = 2;
       itm['url'] = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+      itm['duration'] = 1585652;
 
       res.add(itm);
     }
 
     final itm = {};
 
+    itm['id'] = Generator.generateIntId(10);
     itm['title'] = 'لیست ';
     itm['description'] = 'درک رسیدن به آرامش با تماشای کلیپ های علمی و  درک رسیدن به آرامش با تماشای کلیپ  شای کلیپ های علمی و کار';
 
@@ -135,5 +140,47 @@ class FakeAndHack {
     res.add(itm);
 
     return {Keys.dataList : res};
+  }
+
+  static Map<String, dynamic> simulate_getLevel2Content(GraphHandlerWrap wrapper){
+    final media = [];
+
+    var count = Generator.getRandomInt(2, 30);
+    var type = Generator.getRandomInt(1, 3);
+
+    for(var i=0; i<count; i++){
+      final itm = {};
+
+      itm['id'] = '${Generator.generateIntId(10)}';
+      itm['name'] = 'فیلم  ' + Generator.generateKey(2);
+      itm['url'] = type == 1? 'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4'
+      : 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+      itm['date'] = DateHelper.getNowTimestamp();
+      itm['type'] = type;
+      itm['extension'] = type == 1? 'mp4': 'mp3';
+
+      media.add(itm);
+    }
+
+    /*final itm = {};
+
+    itm['id'] = Generator.generateIntId(10);
+    itm['title'] = 'لیست ';
+    itm['description'] = 'درک رسیدن به آرامش با تماشای کلیپ های علمی و  درک رسیدن به آرامش با تماشای کلیپ  شای کلیپ های علمی و کار';
+    itm['media'] = {'url': 'https://overlay.imageonline.co/overlay-image.jpg'};
+    itm['date'] = DateHelper.getNowTimestamp();
+    itm['type'] = 10;
+    itm['content_type'] = 2;
+
+    res.add(itm);*/
+
+    return {
+      'data': {
+        Keys.id : 123456,
+        Keys.type: type,
+        'speaker': {'id': 12, 'name': 'علی', 'media': {'url': 'https://overlay.imageonline.co/overlay-image.jpg'} },
+        'data_list': media
+      }
+    };
   }
 }

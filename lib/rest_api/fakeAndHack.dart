@@ -55,9 +55,9 @@ class FakeAndHack {
     }
   }
 
-  static Map<String, dynamic> simulate_getLevel1(GraphHandlerWrap wrapper){
+  static Map<String, dynamic> simulate_getBucket(GraphHandlerWrap wrapper){
     final res = [];
-    final upper = wrapper.bodyJSON[Keys.upper];
+    final upper = wrapper.bodyJSON['upper'];
 
     var max = 20;
 
@@ -85,7 +85,7 @@ class FakeAndHack {
 
   static Map<String, dynamic> simulate_getLevel2(GraphHandlerWrap wrapper){
     final res = [];
-    final upper = wrapper.bodyJSON[Keys.upper];
+    final upper = wrapper.bodyJSON['upper'];
 
     var max = 20;
 

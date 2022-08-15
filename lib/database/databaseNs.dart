@@ -363,8 +363,14 @@ class DatabaseNs {
     await DB.execution(QIndex_AppVersions$version_code);
 
     await DB.execution(QTbl_HtmlHolder);
+    await DB.execution(QTbl_textHolder);
 
     await DB.execution(QTbl_SimpleTicket);
+    await DB.execution(QTbl_Media);
+    await DB.execution(QTbl_Speaker);
+    await DB.execution(QTbl_Bucket);
+    await DB.execution(QTbl_SubBucket);
+    await DB.execution(QTbl_SubBucketContent);
   }
 
   static Future prepareFunctions() async{
@@ -836,9 +842,81 @@ class DatabaseNs {
        send_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
        is_deleted BOOLEAN DEFAULT false,
        CONSTRAINT pk_#tb PRIMARY KEY (id)
-      )
-      ;
+      );
       '''.replaceAll('#tb', DbNames.T_SimpleTicket);
+
+
+  static final String QTbl_Media = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id BIGSERIAL NOT NULL,
+       media_path varchar(400) NOT NULL,
+       title varchar(130) DEFAULT NULL,
+       file_name varchar(130) DEFAULT NULL,
+       extension varchar(10) DEFAULT NULL,
+       volume INT DEFAULT NULL,
+       duration INT DEFAULT NULL,
+       width INT DEFAULT NULL,
+       height INT DEFAULT NULL,
+       date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       extra JSONB DEFAULT NULL,
+       CONSTRAINT pk_#tb PRIMARY KEY (id)
+      );
+      '''.replaceAll('#tb', DbNames.T_Media);
+
+  static final String QTbl_Speaker = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id BIGSERIAL,
+       name varchar(150) NOT NULL,
+       description varchar(500) DEFAULT NULL,
+       media_id BIGINT DEFAULT NULL,
+       date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       is_deleted BOOLEAN DEFAULT false,
+       CONSTRAINT pk_#tb PRIMARY KEY (id)
+      );
+      '''.replaceAll('#tb', DbNames.T_speaker);
+
+  static final String QTbl_Bucket = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id BIGSERIAL,
+       media_id BIGINT DEFAULT NULL,
+       title varchar(150) NOT NULL,
+       description varchar(1000) DEFAULT NULL,
+       bucket_type INT DEFAULT 0,
+       date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       is_hide BOOLEAN DEFAULT true,
+       CONSTRAINT pk_#tb PRIMARY KEY (id)
+      );
+      '''.replaceAll('#tb', DbNames.T_Bucket);
+
+  static final String QTbl_SubBucket = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id BIGSERIAL,
+       media_id BIGINT DEFAULT NULL,
+       title varchar(150) NOT NULL,
+       path varchar(400) DEFAULT NULL,
+       description varchar(1000) DEFAULT NULL,
+       duration INT DEFAULT 0,
+       type INT DEFAULT 0,
+       content_type INT DEFAULT NULL,
+       content_id BIGINT DEFAULT NULL,
+       date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       is_deleted BOOLEAN DEFAULT false,
+       CONSTRAINT pk_#tb PRIMARY KEY (id)
+      );
+      '''.replaceAll('#tb', DbNames.T_SubBucket);
+
+  static final String QTbl_SubBucketContent = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id BIGSERIAL,
+       speaker_id BIGINT DEFAULT NULL,
+       media_ids INT[] DEFAULT ARRAY[]::INT[],
+       date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       is_deleted BOOLEAN DEFAULT false,
+       CONSTRAINT pk_#tb PRIMARY KEY (id)
+      );
+      '''.replaceAll('#tb', DbNames.T_BucketContent);
+
+
   //.....................................................................................................
 
   // discount:  num > 0: value | num < 0: percent
@@ -1102,15 +1180,27 @@ class DatabaseNs {
   ON ${DbNames.T_AppVersions} USING BTREE (version_code);''';
 
   static final String QTbl_HtmlHolder = '''
-  CREATE TABLE IF NOT EXISTS ${DbNames.T_HtmlHolder} (
+  CREATE TABLE IF NOT EXISTS #tb (
        id SERIAL,
        key varchar(50) DEFAULT NULL,
        data varchar(20000) DEFAULT NULL,
        owner_id BIGINT NOT NULL,
        update_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
-       CONSTRAINT pk_html_holder PRIMARY KEY (id),
-       CONSTRAINT uk1_html_holder UNIQUE (key)
-      );''';
+       CONSTRAINT pk_#tb PRIMARY KEY (id),
+       CONSTRAINT uk1_#tb UNIQUE (key)
+      );
+      '''.replaceAll('#tb', DbNames.T_HtmlHolder);
+
+  static final String QTbl_textHolder = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id SERIAL,
+       key varchar(50) DEFAULT NULL,
+       data varchar(5000) DEFAULT NULL,
+       update_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       CONSTRAINT pk_#tb PRIMARY KEY (id),
+       CONSTRAINT uk1_#tb UNIQUE (key)
+      );
+      '''.replaceAll('#tb', DbNames.T_TextHolder);
 
   //======	Function	=====================================================================
   /*static final String Q_fn_utc = "CREATE OR REPLACE FUNCTION utc()\n" +

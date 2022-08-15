@@ -51,6 +51,12 @@ class DbNames {
   static const T_Advertising = 'advertising';
   //---------------------------------
   static const T_HtmlHolder = 'html_holder';
+  static const T_TextHolder = 'text_holder';
+  static const T_Bucket = 'bucket';
+  static const T_SubBucket = 'sub_bucket';
+  static const T_BucketContent = 'bucket_content';
+  static const T_Media = 'media';
+  static const T_speaker = 'speaker';
 
   //... Sequence ...........................................................................
   static const Seq_User = 'user_seq';

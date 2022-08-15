@@ -46,14 +46,14 @@ class GraphHandler {
     final body = await req.bodyAsJsonMap;
     late Map<String, dynamic> bJSON;
 
-    if(body.containsKey(Keys.jsonHttpPart)) {
-      bJSON = JsonHelper.jsonToMap<String, dynamic>(body[Keys.jsonHttpPart]!)!;
-      req.store.set('Body', body);
+    if(body.containsKey(Keys.jsonPart)) {
+      bJSON = JsonHelper.jsonToMap<String, dynamic>(body[Keys.jsonPart]!)!;
     }
     else {
       bJSON = body;
     }
 
+    req.store.set('Body', body);
     PublicAccess.logInDebug(bJSON.toString());
 
     final request = bJSON[Keys.requestZone];
@@ -116,7 +116,7 @@ class GraphHandler {
     }
     catch (e){
       PublicAccess.logInDebug('>>> Error in process graph-request:\n$e');
-      //rethrow;
+      rethrow;
     }
   }
   ///==========================================================================================================
@@ -188,7 +188,7 @@ class GraphHandler {
     }
 
     if (request == 'set_aid_dialog_data') {
-      return setAidData(wrapper);
+      return setAidDialogData(wrapper);
     }
 
     if (request == 'get_aid_dialog_data') {
@@ -207,17 +207,22 @@ class GraphHandler {
       return setTicketData(wrapper);
     }
 
-    if (request == 'get_level1_data') {
-      return getLevel1Data(wrapper);
+    if (request == 'upsert_bucket') {
+      return upsertBucket(wrapper);
     }
 
-    if (request == 'get_level2_data') {
-      return getLevel2Data(wrapper);
+    if (request == 'get_bucket_data') {
+      return getBucketData(wrapper);
     }
 
-    if (request == 'get_level2_content_data') {
-      return getLevel2ContentData(wrapper);
+    if (request == 'get_sub_bucket_data') {
+      return getSubBucketData(wrapper);
     }
+
+    if (request == 'get_bucket_content_data') {
+      return getBucketContentData(wrapper);
+    }
+
 
 
     return generateResultError(HttpCodes.error_requestNotDefined);
@@ -294,6 +299,18 @@ class GraphHandler {
     return generateResultOk();
   }
 
+  static Future<Map<String, dynamic>> setAidDialogData(GraphHandlerWrap wrapper) async{
+    final data = wrapper.bodyJSON[Keys.data];
+
+    final r = await CommonMethods.setTextData('aid_dialog', data);
+
+    if(r == null || r < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set aid dialog');
+    }
+
+    return generateResultOk();
+  }
+
   static Future<Map<String, dynamic>> getAidData(GraphHandlerWrap wrapper) async{
     final r = await CommonMethods.getHtmlData('aid');
 
@@ -304,7 +321,7 @@ class GraphHandler {
   }
 
   static Future<Map<String, dynamic>> getAidDialogData(GraphHandlerWrap wrapper) async{
-    final r = await CommonMethods.getHtmlData('aid');
+    final r = await CommonMethods.getTextData('aid_dialog');
 
     final res = generateResultOk();
     res[Keys.data] = r;
@@ -347,26 +364,71 @@ class GraphHandler {
     return res;
   }
 
-  static Future<Map<String, dynamic>> getLevel1Data(GraphHandlerWrap wrapper) async{
+  static Future<Map<String, dynamic>> upsertBucket(GraphHandlerWrap wrapper) async{
+    final key = wrapper.bodyJSON[Keys.key];
+    final bucketData = wrapper.bodyJSON[Keys.data];
+
+    if(key == null || bucketData == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    var image = wrapper.bodyJSON['image'];
+    int? mediaId;
+
+    if(image is String){
+      final body = wrapper.request.store.get('Body');
+      final savedFile = await ServerNs.uploadFile(wrapper.request, body, image);
+
+      if(savedFile == null){
+        return generateResultError(HttpCodes.error_notUpload);
+      }
+
+      mediaId = await CommonMethods.insertMedia(savedFile);
+    }
+
+    final result = await CommonMethods.upsetBucket(wrapper.userId!, wrapper.bodyJSON, mediaId);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not upsert bucket');
+    }
+
+    final res = generateResultOk();
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getBucketData(GraphHandlerWrap wrapper) async{
     final key = wrapper.bodyJSON[Keys.key];
 
     if(key == null){
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    /*final r = await CommonMethods.setTicket(wrapper.userId!, data);
+    final buckets = await CommonMethods.getBuckets(wrapper.userId!, wrapper.bodyJSON);
 
-    if(r == null || r < 1) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set ticket');
-    }*/
+    if(buckets == null) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not get bucket');
+    }
+
+    var mediaIds = <int>{};
+
+    for(final k in buckets){
+      if(k['media_id'] != null){
+        mediaIds.add(k['media_id']);
+      }
+    }
+
+    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
 
     final res = generateResultOk();
-    res.addAll(FakeAndHack.simulate_getLevel1(wrapper));
+    res['bucket_list'] = buckets;
+    res['media_list'] = mediaList?? [];
+    res['all_count'] = 0;
 
     return res;
   }
 
-  static Future<Map<String, dynamic>> getLevel2Data(GraphHandlerWrap wrapper) async{
+  static Future<Map<String, dynamic>> getSubBucketData(GraphHandlerWrap wrapper) async{
     final modelId = wrapper.bodyJSON[Keys.id];
 
     if(modelId == null){
@@ -385,7 +447,7 @@ class GraphHandler {
     return res;
   }
 
-  static Future<Map<String, dynamic>> getLevel2ContentData(GraphHandlerWrap wrapper) async{
+  static Future<Map<String, dynamic>> getBucketContentData(GraphHandlerWrap wrapper) async{
     final level2Id = wrapper.bodyJSON[Keys.id];
 
     if(level2Id == null){
@@ -403,6 +465,10 @@ class GraphHandler {
 
     return res;
   }
+
+
+
+
 
 
 

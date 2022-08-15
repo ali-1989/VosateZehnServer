@@ -8,6 +8,32 @@ import 'package:vosate_zehn_server/rest_api/queryFiltering.dart';
 class QueryList {
   QueryList._();
 
+  static String getMediasByIds(){
+    //, screenshot_path as screenshot_uri
+    final q = '''
+    With c1 AS
+         (SELECT id, title, file_name, extension,
+                 volume, width, height, duration,
+                 date, extra, media_path as url
+            FROM media
+             WHERE id in (@list)
+         )
+
+  SELECT * FROM c1;
+    ''';
+
+    return q;
+  }
+
+
+
+
+
+
+
+
+
+
   static String advancedUsers_q1(List<int> ids){
     var q = '''
     SELECT 
@@ -629,23 +655,6 @@ class QueryList {
     q = q.replaceFirst(RegExp('#ticketId'), '$ticketId');
     q = q.replaceFirst(RegExp('#userId'), '$userId');
     q = q.replaceAll(RegExp('#ts'), ts);
-
-    return q;
-  }
-
-  static String getMediasByIds(){
-    //, screenshot_path as screenshot_uri
-    final q = '''
-    With c1 AS
-         (SELECT id, message_type, group_id, extension,
-                 name, width, height, volume, duration,
-                 screenshot_js, extra_js, path as uri
-            FROM mediamessagedata
-             WHERE id in (@list)
-         )
-
-  SELECT * FROM c1;
-    ''';
 
     return q;
   }

@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'dart:io';
 import 'package:assistance_kit/database/psql2.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
 import 'package:assistance_kit/api/helpers/urlHelper.dart';
@@ -20,6 +21,7 @@ import 'package:vosate_zehn_server/models/photoDataModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/queryFiltering.dart';
 import 'package:vosate_zehn_server/keys.dart';
+import 'package:vosate_zehn_server/rest_api/searchFilterTool.dart';
 
 class CommonMethods {
   CommonMethods._();
@@ -130,6 +132,30 @@ class CommonMethods {
     return await PublicAccess.psql2.getColumn(q, 'data');
   }
 
+  static Future<int?> setTextData(String key, String? data) async {
+    final where = '''key = '$key' ''';
+
+    final kv = <String, dynamic>{};
+    kv['key'] = key;
+    kv['data'] = data;
+    kv['update_date'] = DateHelper.getNowTimestampToUtc();
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_TextHolder, kv, where: where);
+
+    if(cursor is num){
+      return cursor!.toInt();
+    }
+
+    return null;
+  }
+
+  static Future<String?> getTextData(String key) async {
+    var q = '''SELECT * FROM #T WHERE key = '$key' ''';
+    q = q.replaceFirst('#T', DbNames.T_TextHolder);
+
+    return await PublicAccess.psql2.getColumn(q, 'data');
+  }
+
   static Future<int?> setTicket(int userId, String? data) async {
     final kv = <String, dynamic>{};
     kv['sender_user_id'] = userId;
@@ -144,6 +170,154 @@ class CommonMethods {
 
     return null;
   }
+
+  static Future<List<Map>?> getBuckets(int userId, Map jsData) async {
+    final key = jsData[Keys.key];
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = '''SELECT * FROM #tb WHERE (#w) AND
+        bucket_type = #key
+        order by date DESC
+        limit #lim
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_Bucket);
+    q = q.replaceFirst('#key', '$key');
+    q = q.replaceFirst('#lim', '${sf.limit}');
+
+    var w = 'true';
+
+    if(sf.filters['by_delete'] == null){
+      w = 'is_deleted = false';//is_hide
+    }
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+      w += ' AND (title like $t OR description like $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
+  }
+
+  static Future<bool> upsetBucket(int userId, Map jsData, int? mediaId) async {
+    //final key = jsData[Keys.key];
+    final bucketData = jsData[Keys.data];
+
+    final kv = <String, dynamic>{};
+    kv['title'] = bucketData['title'];
+    kv['description'] = bucketData['description'];
+    kv['bucket_type'] = bucketData['bucket_type'];
+
+    if(bucketData['date'] != null) {
+      kv['date'] = bucketData['date'];
+    }
+
+    if(bucketData['is_hide'] != null) {
+      kv['is_hide'] = bucketData['is_hide'];
+    }
+
+    if(mediaId != null) {
+      kv['media_id'] = mediaId;
+    }
+
+    var id = -1;
+
+    if(bucketData['id'] != null){
+      id = bucketData['id'];
+    }
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_Bucket, kv, where: ' id = $id');
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static Future getMediasByIds(int userId, List mediaIds) async {
+    if(mediaIds.isEmpty){
+      return <Map<String, dynamic>>[];
+    }
+
+    final replace = {};
+    replace['@list'] = Psql2.listToSequenceNum(mediaIds);
+
+    final qs = QuerySelector();
+    qs.addQuery(QueryList.getMediasByIds());
+
+    final listOrNull = await PublicAccess.psql2.queryCall(qs.generate(0, replace));
+
+    if (listOrNull == null || listOrNull.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    // smpl: reWrite
+    return listOrNull.map((e) {
+      final m = e.toMap();
+      m['url'] = PathsNs.genUrlDomainFromLocalPathByDecoding(PublicAccess.domain, PathsNs.getCurrentPath(), m['url']);
+      return m as Map<String, dynamic>;
+    }).toList();
+  }
+
+  static Future<int> insertMedia(File file, {
+    String? title, String? file_name,
+    String? extension, int? duration,
+    int? width, int? height,
+  }) async {
+    final p = PathsNs.removeBasePathFromLocalPath(PathsNs.getCurrentPath(), file.path);
+
+    final kv = <String, dynamic>{};
+    kv['volume'] = file.lengthSync();
+    kv['media_path'] = UrlHelper.encodeUrl(p!);
+
+    if(duration != null){
+      kv['duration'] = duration;
+    }
+
+    if(width != null){
+      kv['width'] = width;
+    }
+
+    if(height != null){
+      kv['height'] = height;
+    }
+
+    if(extension != null){
+      kv['extension'] = extension;
+    }
+
+    if(file_name != null){
+      kv['file_name'] = file_name;
+    }
+
+    if(title != null){
+      kv['title'] = title;
+    }
+
+    final cursor = await PublicAccess.psql2.insertKvReturning(DbNames.T_Media, kv, 'id');
+
+    if (cursor == null || cursor.isEmpty) {
+      return 0;
+    }
+
+    return cursor[0].toList()[0];
+  }
+
 
 
 
@@ -356,30 +530,6 @@ class CommonMethods {
     return num != null && num > -1;
   }
 
-  static Future getMediasByIds(int userId, List mediaIds) async {
-    if(mediaIds.isEmpty){
-      return <Map<String, dynamic>>[];
-    }
-
-    final replace = {};
-    replace['@list'] = Psql2.listToSequenceNum(mediaIds);
-
-    final qs = QuerySelector();
-    qs.addQuery(QueryList.getMediasByIds());
-
-    final listOrNull = await PublicAccess.psql2.queryCall(qs.generate(0, replace));
-
-    if (listOrNull == null || listOrNull.isEmpty) {
-      return <Map<String, dynamic>>[];
-    }
-
-    // smpl: reWrite
-    return listOrNull.map((e) {
-      final m = e.toMap();
-      m['uri'] = PathsNs.genUrlDomainFromLocalPathByDecoding(PublicAccess.domain, PathsNs.getCurrentPath(), m['uri']);
-      return m as Map<String, dynamic>;
-    }).toList();
-  }
 
   static Future updateLastTicketSeen(int userId, int ticketId, String ts) async {
     final q = '''SELECT update_seen_ticket($userId, $ticketId, '$ts'::timestamp);''';

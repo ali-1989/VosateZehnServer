@@ -36,7 +36,8 @@ class CronAssistance {
           final rMap = cursor.elementAt(i).toMap();
 
           final path = UrlHelper.decodePathFromDataBase(rMap['Path'.L]);
-          var f = File(PathHelper.normalize(basePath + PathHelper.getSeparator() + path!)!);
+          final wBasePath = PathHelper.normalize(basePath + PathHelper.getSeparator() + path!)!;
+          var f = File(wBasePath);
 
           if (!f.existsSync()) {
             f = File(path);
@@ -48,15 +49,16 @@ class CronAssistance {
 
             continue;
           }
+          else{
+            final last = FileHelper.lastModifiedSync(f.path).millisecondsSinceEpoch;
 
-          final last = FileHelper.lastModifiedSync(f.path).millisecondsSinceEpoch;
+            if (last < (now - OneHour)) {
+              FileHelper.deleteSync(f.path);
 
-          if (last < (now - OneHour)) {
-            FileHelper.deleteSync(f.path);
-
-            if (!f.existsSync()) {
-              final q2 = 'DELETE FROM ${DbNames.T_CandidateToDelete} WHERE Id = ${rMap['id']};';
-              await PublicAccess.psql2.execution(q2);
+              if (!f.existsSync()) {
+                final q2 = 'DELETE FROM ${DbNames.T_CandidateToDelete} WHERE Id = ${rMap['id']};';
+                await PublicAccess.psql2.execution(q2);
+              }
             }
           }
         }

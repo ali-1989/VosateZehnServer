@@ -7,8 +7,8 @@ class AdminCommands {
     'set_aid_data',
     'set_aid_dialog_data',
     'set_term_data',
-    'delete_bucket_image',
     'upsert_bucket',
+    'delete_bucket',
   ];
 
   static bool isAdminCommand(String request){

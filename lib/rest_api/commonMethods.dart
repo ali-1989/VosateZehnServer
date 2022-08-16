@@ -1,5 +1,6 @@
 import 'dart:core';
 import 'dart:io';
+import 'package:assistance_kit/api/helpers/textHelper.dart';
 import 'package:assistance_kit/database/psql2.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
 import 'package:assistance_kit/api/helpers/urlHelper.dart';
@@ -175,32 +176,8 @@ class CommonMethods {
     final key = jsData[Keys.key];
     final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
 
-    var q = '''SELECT * FROM #tb WHERE (#w) AND
-        bucket_type = #key
-        order by date DESC
-        limit #lim
-        ''';
-
-    q = q.replaceFirst('#tb', DbNames.T_Bucket);
+    var q = QueryList.getBuckets(sf);
     q = q.replaceFirst('#key', '$key');
-    q = q.replaceFirst('#lim', '${sf.limit}');
-
-    var w = 'true';
-
-    if(sf.filters['by_delete'] == null){
-      w = 'is_deleted = false';//is_hide
-    }
-
-    if(sf.searchText != null){
-      final t = '\$t\$%${sf.searchText}%\$t\$';
-      w += ' AND (title like $t OR description like $t)';
-    }
-
-    if(sf.lower != null){
-      w += " AND (date < '${sf.lower}'::timestamp)";
-    }
-
-    q = q.replaceFirst('#w', w);
 
     final cursor = await PublicAccess.psql2.queryCall(q);
 
@@ -213,9 +190,26 @@ class CommonMethods {
     }).toList();
   }
 
+  static Future<int> getBucketsCount(Map jsData) async {
+    final key = jsData[Keys.key];
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getBucketsCount(sf);
+    q = q.replaceFirst('#key', '$key');
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return 0;
+    }
+
+    return cursor.elementAt(0).toList()[0];
+  }
+
   static Future<bool> upsetBucket(int userId, Map jsData, int? mediaId) async {
     //final key = jsData[Keys.key];
     final bucketData = jsData[Keys.data];
+    final image = jsData['image'];
 
     final kv = <String, dynamic>{};
     kv['title'] = bucketData['title'];
@@ -238,6 +232,11 @@ class CommonMethods {
 
     if(bucketData['id'] != null){
       id = bucketData['id'];
+      kv['id'] = bucketData['id'];
+
+      if(image is bool){ // mean: delete image in edit mode
+        kv['media_id'] = null;
+      }
     }
 
     final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_Bucket, kv, where: ' id = $id');
@@ -247,6 +246,32 @@ class CommonMethods {
     }
 
     return true;
+  }
+
+  static Future<bool> deleteBucket(int bucketId) async {
+    return (await PublicAccess.psql2.delete(DbNames.T_Bucket, 'id = $bucketId')) > 0;
+  }
+
+  static Future<int?> getMediaIdFromBucket(int bucketId) async {
+    final q = 'SELECT media_id FROM ${DbNames.T_Bucket} WHERE id = $bucketId;';
+    return await PublicAccess.psql2.getColumn(q, 'media_id');
+  }
+
+  static Future deleteMedia(int mediaId) async {
+    final q = 'SELECT media_path FROM ${DbNames.T_Media} WHERE id = $mediaId;';
+    final oldRelPath = await PublicAccess.psql2.getColumn(q, 'media_path');
+
+    final x = await PublicAccess.psql2.delete(DbNames.T_Media, 'id = $mediaId');
+
+    if(x != null && x > 0){
+      if(!TextHelper.isEmptyOrNull(oldRelPath)) {
+        PublicAccess.insertEncodedPathToJunkFile(oldRelPath);
+      }
+
+      return true;
+    }
+
+    return false;
   }
 
   static Future getMediasByIds(int userId, List mediaIds) async {

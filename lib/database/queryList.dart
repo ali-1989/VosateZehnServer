@@ -4,9 +4,65 @@ import 'package:assistance_kit/dateSection/ADateStructure.dart';
 import 'package:vosate_zehn_server/database/dbNames.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/queryFiltering.dart';
+import 'package:vosate_zehn_server/rest_api/searchFilterTool.dart';
 
 class QueryList {
   QueryList._();
+
+  static String getBuckets(SearchFilterTool sf){
+    var q = '''SELECT * FROM #tb WHERE (#w) AND
+        bucket_type = #key
+        order by date DESC
+        limit #lim
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_Bucket);
+    q = q.replaceFirst('#lim', '${sf.limit}');
+
+    var w = 'true';
+
+    if(sf.filters['is_hide'] == null){
+      w = 'is_hide = false';
+    }
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+      w += ' AND (title like $t OR description like $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
+
+  static String getBucketsCount(SearchFilterTool sf){
+    var q = '''SELECT count(id) as count FROM #tb WHERE (#w) AND
+        bucket_type = #key
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_Bucket);
+
+    var w = 'true';
+
+    if(sf.filters['is_hide'] == null){
+      w = 'is_hide = false';
+    }
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+      w += ' AND (title like $t OR description like $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
 
   static String getMediasByIds(){
     //, screenshot_path as screenshot_uri

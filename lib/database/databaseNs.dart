@@ -891,6 +891,7 @@ class DatabaseNs {
   static final String QTbl_SubBucket = '''
   CREATE TABLE IF NOT EXISTS #tb (
        id BIGSERIAL,
+       parent_id BIGINT DEFAULT NULL,
        media_id BIGINT DEFAULT NULL,
        title varchar(150) NOT NULL,
        path varchar(400) DEFAULT NULL,
@@ -900,7 +901,7 @@ class DatabaseNs {
        content_type INT DEFAULT NULL,
        content_id BIGINT DEFAULT NULL,
        date TIMESTAMP DEFAULT (now() at time zone 'utc'),
-       is_deleted BOOLEAN DEFAULT false,
+       is_hide BOOLEAN DEFAULT false,
        CONSTRAINT pk_#tb PRIMARY KEY (id)
       );
       '''.replaceAll('#tb', DbNames.T_SubBucket);
@@ -908,10 +909,10 @@ class DatabaseNs {
   static final String QTbl_SubBucketContent = '''
   CREATE TABLE IF NOT EXISTS #tb (
        id BIGSERIAL,
+       parent_id BIGINT DEFAULT NULL,
        speaker_id BIGINT DEFAULT NULL,
        media_ids INT[] DEFAULT ARRAY[]::INT[],
        date TIMESTAMP DEFAULT (now() at time zone 'utc'),
-       is_deleted BOOLEAN DEFAULT false,
        CONSTRAINT pk_#tb PRIMARY KEY (id)
       );
       '''.replaceAll('#tb', DbNames.T_BucketContent);

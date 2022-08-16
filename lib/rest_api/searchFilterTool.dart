@@ -10,7 +10,7 @@ class SearchFilterTool {
 
   SearchFilterTool();
 
-  void addFilter(String key, String value){
+  void addFilter(String key, dynamic value){
     _kv[key] = value;
   }
 

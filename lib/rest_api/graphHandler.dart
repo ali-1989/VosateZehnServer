@@ -211,6 +211,10 @@ class GraphHandler {
       return upsertBucket(wrapper);
     }
 
+    if (request == 'delete_bucket') {
+      return deleteBucket(wrapper);
+    }
+
     if (request == 'get_bucket_data') {
       return getBucketData(wrapper);
     }
@@ -386,10 +390,42 @@ class GraphHandler {
       mediaId = await CommonMethods.insertMedia(savedFile);
     }
 
+    if(wrapper.bodyJSON['delete_media_id'] != null){ // is edit mode
+      //final mediaId = await CommonMethods.getMediaIdFromBucket(bucketData['id']);
+
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(wrapper.bodyJSON['delete_media_id']);
+    }
+
     final result = await CommonMethods.upsetBucket(wrapper.userId!, wrapper.bodyJSON, mediaId);
 
     if(!result) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not upsert bucket');
+    }
+
+    final res = generateResultOk();
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> deleteBucket(GraphHandlerWrap wrapper) async{
+    final bucketId = wrapper.bodyJSON[Keys.id];
+
+    if(bucketId == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final mediaId = await CommonMethods.getMediaIdFromBucket(bucketId);
+
+    if(mediaId != null) {
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(mediaId);
+    }
+
+    final result = await CommonMethods.deleteBucket(bucketId);
+//todo: must delete subBucket & content
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete bucket');
     }
 
     final res = generateResultOk();
@@ -410,6 +446,8 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not get bucket');
     }
 
+    final count = await CommonMethods.getBucketsCount(wrapper.bodyJSON);
+
     var mediaIds = <int>{};
 
     for(final k in buckets){
@@ -423,7 +461,7 @@ class GraphHandler {
     final res = generateResultOk();
     res['bucket_list'] = buckets;
     res['media_list'] = mediaList?? [];
-    res['all_count'] = 0;
+    res['all_count'] = count;
 
     return res;
   }

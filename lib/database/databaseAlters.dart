@@ -4,7 +4,31 @@ import 'package:vosate_zehn_server/publicAccess.dart';
 class DatabaseAlters {
   DatabaseAlters._();
 
-  // deprecate
+  static Future fireBeforeDatabase() async {
+    final result = await PublicAccess.psql2.getColumsName(DbNames.T_SubBucket);
+
+    if(result == null || result.isEmpty){
+      return;
+    }
+
+    var found = false;
+
+    for(final k in result.toList()){
+      if(k[0] == 'cover_id'){
+        found = true;
+        break;
+      }
+    }
+
+    if(!found) {
+      await PublicAccess.psql2.deleteTableCascade(DbNames.T_SubBucket);
+    }
+  }
+
+  static Future fireAfterDatabase() async {
+    //test();
+  }
+
   static Future test(){
     var q = '''
     DO \$\$ BEGIN

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:vosate_zehn_server/constants.dart';
+import 'package:vosate_zehn_server/database/databaseAlters.dart';
 import 'package:vosate_zehn_server/database/dbNames.dart';
 import 'package:vosate_zehn_server/database/models/continent.dart';
 import 'package:vosate_zehn_server/database/models/country.dart';
@@ -31,12 +32,14 @@ class DatabaseNs {
 
   static Future initial() async{
     await improveAndSetting();
+    await DatabaseAlters.fireBeforeDatabase();
     await createSequences();
     await prepareTables();
     //no need await initialSequence();
     await prepareFunctions();
     await alters();
     setPreData();
+    await DatabaseAlters.fireAfterDatabase();
   }
 
   static Future improveAndSetting() async{
@@ -892,9 +895,9 @@ class DatabaseNs {
   CREATE TABLE IF NOT EXISTS #tb (
        id BIGSERIAL,
        parent_id BIGINT DEFAULT NULL,
+       cover_id BIGINT DEFAULT NULL,
        media_id BIGINT DEFAULT NULL,
        title varchar(150) NOT NULL,
-       path varchar(400) DEFAULT NULL,
        description varchar(1000) DEFAULT NULL,
        duration INT DEFAULT 0,
        type INT DEFAULT 0,

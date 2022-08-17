@@ -248,6 +248,46 @@ class CommonMethods {
     return true;
   }
 
+  static Future<bool> upsetSubBucket(Map jsData, int? coverId, int? mediaId, int? contentId) async {
+    //final key = jsData[Keys.key];
+    final bucketData = jsData[Keys.data];
+    final cover = jsData['cover'];
+
+    var kv = <String, dynamic>{};
+    kv['parent_id'] = bucketData['parent_id'];
+    kv['title'] = bucketData['title'];
+    kv['description'] = bucketData['description'];
+    kv['type'] = bucketData['type'];
+    kv['duration'] = bucketData['duration'];
+    kv['content_type'] = bucketData['content_type'];
+    kv['content_id'] = contentId;
+    kv['media_id'] = mediaId;
+
+    kv['id'] = bucketData['id'];
+    kv['date'] = bucketData['date'];
+    kv['is_hide'] = bucketData['is_hide'];
+    kv['cover_id'] = coverId;
+
+    kv = JsonHelper.removeNullsByKey(kv, ['id', 'date', 'is_hide', 'cover_id'])!;
+    var id = -1;
+
+    if(bucketData['id'] != null){
+      id = bucketData['id'];
+
+      if(cover is bool){ // mean: delete cover in edit mode
+        kv['cover_id'] = null;
+      }
+    }
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_SubBucket, kv, where: ' id = $id');
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
   static Future<bool> deleteBucket(int bucketId) async {
     return (await PublicAccess.psql2.delete(DbNames.T_Bucket, 'id = $bucketId')) > 0;
   }

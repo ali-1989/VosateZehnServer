@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:alfred/alfred.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
 import 'package:vosate_zehn_server/database/models/userBlockList.dart';
@@ -211,6 +212,10 @@ class GraphHandler {
       return upsertBucket(wrapper);
     }
 
+    if (request == 'upsert_sub_bucket') {
+      return upsertSubBucket(wrapper);
+    }
+
     if (request == 'delete_bucket') {
       return deleteBucket(wrapper);
     }
@@ -398,6 +403,67 @@ class GraphHandler {
     }
 
     final result = await CommonMethods.upsetBucket(wrapper.userId!, wrapper.bodyJSON, mediaId);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not upsert bucket');
+    }
+
+    final res = generateResultOk();
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> upsertSubBucket(GraphHandlerWrap wrapper) async{
+    //final bucketId = wrapper.bodyJSON[Keys.id];
+    final subBucketData = wrapper.bodyJSON[Keys.data];
+
+    if(subBucketData == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    var cover = wrapper.bodyJSON['cover'];
+    var videoAudio = wrapper.bodyJSON['media'];
+    int? coverId;
+
+    final body = wrapper.request.store.get('Body');
+
+    final mediaFile = await ServerNs.uploadFile(wrapper.request, body, videoAudio);
+
+    if(mediaFile == null){
+      return generateResultError(HttpCodes.error_notUpload);
+    }
+
+    if(subBucketData['duration'] == null){
+      var args = ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=duration',
+        '-of', 'default=noprint_wrappers=1:nokey=1', mediaFile.path];
+
+      try {
+        final result = await Process.run('ffprobe', args);
+        var d = Duration(seconds: double.parse(result.stdout).toInt());
+
+        subBucketData['duration'] = d.inMilliseconds;
+      }
+      catch (e){print(e);}
+    }
+
+    int? mediaId = await CommonMethods.insertMedia(mediaFile);
+
+    if(cover is String){
+      final coverFile = await ServerNs.uploadFile(wrapper.request, body, cover);
+
+      if(coverFile == null){
+        return generateResultError(HttpCodes.error_notUpload);
+      }
+
+      coverId = await CommonMethods.insertMedia(coverFile);
+    }
+
+    if(wrapper.bodyJSON['delete_cover_id'] != null){ // is edit mode
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(wrapper.bodyJSON['delete_cover_id']);
+    }
+
+    final result = await CommonMethods.upsetSubBucket(wrapper.bodyJSON, coverId, mediaId, null);
 
     if(!result) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not upsert bucket');

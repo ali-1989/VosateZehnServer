@@ -9,6 +9,10 @@ class AdminCommands {
     'set_term_data',
     'upsert_bucket',
     'delete_bucket',
+    'upsert_sub_bucket',
+    'delete_sub_bucket',
+    'upsert_speaker',
+    'delete_speaker',
   ];
 
   static bool isAdminCommand(String request){

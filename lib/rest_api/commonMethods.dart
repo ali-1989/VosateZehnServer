@@ -248,80 +248,6 @@ class CommonMethods {
     return true;
   }
 
-  static Future<bool> upsetSubBucket(Map jsData, int? coverId, int? mediaId, int? contentId) async {
-    //final key = jsData[Keys.key];
-    final bucketData = jsData[Keys.data];
-    final cover = jsData['cover'];
-
-    var kv = <String, dynamic>{};
-    kv['parent_id'] = bucketData['parent_id'];
-    kv['title'] = bucketData['title'];
-    kv['description'] = bucketData['description'];
-    kv['type'] = bucketData['type'];
-    kv['duration'] = bucketData['duration'];
-    kv['content_type'] = bucketData['content_type'];
-    kv['content_id'] = contentId;
-    kv['media_id'] = mediaId;
-
-    kv['id'] = bucketData['id'];
-    kv['date'] = bucketData['date'];
-    kv['is_hide'] = bucketData['is_hide'];
-    kv['cover_id'] = coverId;
-
-    kv = JsonHelper.removeNullsByKey(kv, ['id', 'date', 'is_hide', 'cover_id'])!;
-    var id = -1;
-
-    if(bucketData['id'] != null){
-      id = bucketData['id'];
-
-      if(cover is bool){ // mean: delete cover in edit mode
-        kv['cover_id'] = null;
-      }
-    }
-
-    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_SubBucket, kv, where: ' id = $id');
-
-    if (cursor == null || cursor < 1) {
-      return false;
-    }
-
-    return true;
-  }
-
-  static Future<List<Map>?> getSubBuckets(Map jsData) async {
-    final pId = jsData[Keys.id];
-    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
-
-    var q = QueryList.getSubBuckets(sf);
-    q = q.replaceFirst('#pId', '$pId');
-
-    final cursor = await PublicAccess.psql2.queryCall(q);
-
-    if (cursor == null || cursor.isEmpty) {
-      return <Map<String, dynamic>>[];
-    }
-
-    return cursor.map((e) {
-      return (e.toMap() as Map<String, dynamic>);
-    }).toList();
-  }
-
-  static Future<int> getSubBucketsCount(Map jsData) async {
-    final parentId = jsData[Keys.id];
-    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
-
-    var q = QueryList.getSubBucketsCount(sf);
-    q = q.replaceFirst('#pId', '$parentId');
-
-    final cursor = await PublicAccess.psql2.queryCall(q);
-
-    if (cursor == null || cursor.isEmpty) {
-      return 0;
-    }
-
-    return cursor.elementAt(0).toList()[0];
-  }
-
   static Future<bool> deleteBucket(int bucketId) async {
     return (await PublicAccess.psql2.delete(DbNames.T_Bucket, 'id = $bucketId')) > 0;
   }
@@ -416,6 +342,169 @@ class CommonMethods {
 
     return cursor[0].toList()[0];
   }
+
+  static Future<bool> upsetSubBucket(Map jsData, int? coverId, int? mediaId, int? contentId) async {
+    //final key = jsData[Keys.key];
+    final bucketData = jsData[Keys.data];
+    final cover = jsData['cover'];
+
+    var kv = <String, dynamic>{};
+    kv['parent_id'] = bucketData['parent_id'];
+    kv['title'] = bucketData['title'];
+    kv['description'] = bucketData['description'];
+    kv['type'] = bucketData['type'];
+    kv['duration'] = bucketData['duration'];
+    kv['content_type'] = bucketData['content_type'];
+    kv['content_id'] = contentId;
+    kv['media_id'] = mediaId;
+
+    kv['id'] = bucketData['id'];
+    kv['date'] = bucketData['date'];
+    kv['is_hide'] = bucketData['is_hide'];
+    kv['cover_id'] = coverId;
+
+    kv = JsonHelper.removeNullsByKey(kv, ['id', 'date', 'is_hide', 'cover_id'])!;
+    var id = -1;
+
+    if(bucketData['id'] != null){
+      id = bucketData['id'];
+
+      if(cover is bool){ // mean: delete cover in edit mode
+        kv['cover_id'] = null;
+      }
+    }
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_SubBucket, kv, where: ' id = $id');
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static Future<List<Map>?> getSubBuckets(Map jsData) async {
+    final pId = jsData[Keys.id];
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getSubBuckets(sf);
+    q = q.replaceFirst('#pId', '$pId');
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
+  }
+
+  static Future<int> getSubBucketsCount(Map jsData) async {
+    final parentId = jsData[Keys.id];
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getSubBucketsCount(sf);
+    q = q.replaceFirst('#pId', '$parentId');
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return 0;
+    }
+
+    return cursor.elementAt(0).toList()[0];
+  }
+
+  static Future<int?> getMediaIdFromSubBucket(int subBucketId) async {
+    final q = 'SELECT media_id FROM ${DbNames.T_SubBucket} WHERE id = $subBucketId;';
+    return await PublicAccess.psql2.getColumn(q, 'media_id');
+  }
+
+  static Future<int?> getCoverIdFromSubBucket(int bucketId) async {
+    final q = 'SELECT cover_id FROM ${DbNames.T_SubBucket} WHERE id = $bucketId;';
+    return await PublicAccess.psql2.getColumn(q, 'cover_id');
+  }
+
+  static Future<bool> deleteSubBucket(int subBucketId) async {
+    return (await PublicAccess.psql2.delete(DbNames.T_SubBucket, 'id = $subBucketId')) > 0;
+  }
+
+  static Future<List<Map>?> getSpeakers(Map jsData) async {
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getSpeakers(sf);
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
+  }
+
+  static Future<int> getSpeakersCount(Map jsData) async {
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getSpeakersCount(sf);
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return 0;
+    }
+
+    return cursor.elementAt(0).toList()[0];
+  }
+
+  static Future<bool> upsetSpeaker(Map jsData, int? mediaId) async {
+   final speakerData = jsData[Keys.data];
+    final cover = jsData['image'];
+
+    var kv = <String, dynamic>{};
+    kv['name'] = speakerData[Keys.name];
+    kv['description'] = speakerData['description'];
+    kv['id'] = speakerData[Keys.id];
+    kv['date'] = speakerData['date'];
+    kv['is_hide'] = speakerData['is_hide'];
+    kv['media_id'] = mediaId;
+
+   kv = JsonHelper.removeNullsByKey(kv, ['id', 'date', 'is_hide', 'media_id'])!;
+    var id = -1;
+
+    if(speakerData['id'] != null){
+      id = speakerData['id'];
+
+      if(cover is bool){ // mean: delete cover in edit mode
+        kv['media_id'] = null;
+      }
+    }
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_speaker, kv, where: ' id = $id');
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static Future<bool> deleteSpeaker(int subBucketId) async {
+    return (await PublicAccess.psql2.delete(DbNames.T_speaker, 'id = $subBucketId')) > 0;
+  }
+
+  static Future<int?> getMediaIdFromSpeaker(int bucketId) async {
+    final q = 'SELECT media_id FROM ${DbNames.T_speaker} WHERE id = $bucketId;';
+    return await PublicAccess.psql2.getColumn(q, 'media_id');
+  }
+
+
+
+
 
 
 

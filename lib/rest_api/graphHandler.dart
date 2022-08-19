@@ -228,8 +228,24 @@ class GraphHandler {
       return getSubBucketData(wrapper);
     }
 
+    if (request == 'delete_sub_bucket') {
+      return deleteSubBucket(wrapper);
+    }
+
     if (request == 'get_bucket_content_data') {
       return getBucketContentData(wrapper);
+    }
+
+    if (request == 'upsert_speaker') {
+      return upsertSpeaker(wrapper);
+    }
+
+    if (request == 'delete_speaker') {
+      return deleteSpeaker(wrapper);
+    }
+
+    if (request == 'get_speaker_data') {
+      return getSpeakerData(wrapper);
     }
 
 
@@ -423,11 +439,12 @@ class GraphHandler {
 
     var cover = wrapper.bodyJSON['cover'];
     var media = wrapper.bodyJSON['media'];
+    var type = subBucketData['type'];
     File? mediaFile;
     int? mediaId;
     int? coverId;
 
-    if(media == null && subBucketData['id'] == null){
+    if(media == null && subBucketData['id'] == null && type != 10){
       return generateResultError(HttpCodes.error_notUpload);
     }
 
@@ -589,9 +606,9 @@ class GraphHandler {
   }
 
   static Future<Map<String, dynamic>> getBucketContentData(GraphHandlerWrap wrapper) async{
-    final level2Id = wrapper.bodyJSON[Keys.id];
+    final bucketId = wrapper.bodyJSON[Keys.id];
 
-    if(level2Id == null){
+    if(bucketId == null){
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
@@ -603,6 +620,127 @@ class GraphHandler {
 
     final res = generateResultOk();
     res.addAll(FakeAndHack.simulate_getLevel2Content(wrapper));
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> deleteSubBucket(GraphHandlerWrap wrapper) async{
+    final subBucketId = wrapper.bodyJSON[Keys.id];
+
+    if(subBucketId == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final mediaId = await CommonMethods.getMediaIdFromSubBucket(subBucketId);
+
+    if(mediaId != null) {
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(mediaId);
+    }
+
+    final coverId = await CommonMethods.getCoverIdFromSubBucket(subBucketId);
+
+    if(coverId != null) {
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(coverId);
+    }
+
+    final result = await CommonMethods.deleteSubBucket(subBucketId);
+//todo: must delete content
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete sub-bucket');
+    }
+
+    final res = generateResultOk();
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getSpeakerData(GraphHandlerWrap wrapper) async{
+    final speakers = await CommonMethods.getSpeakers(wrapper.bodyJSON);
+
+    if(speakers == null) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not get speakers');
+    }
+
+    final count = await CommonMethods.getSpeakersCount(wrapper.bodyJSON);
+
+    var mediaIds = <int>{};
+
+    for(final k in speakers){
+      if(k['media_id'] != null){
+        mediaIds.add(k['media_id']);
+      }
+    }
+
+    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+
+    final res = generateResultOk();
+    res['speaker_list'] = speakers;
+    res['media_list'] = mediaList?? [];
+    res['all_count'] = count;
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> upsertSpeaker(GraphHandlerWrap wrapper) async{
+    final speakerData = wrapper.bodyJSON[Keys.data];
+
+    if(speakerData == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    var profile = wrapper.bodyJSON['image'];
+    int? mediaId;
+
+    if(profile is String){
+      final body = wrapper.request.store.get('Body');
+      final profileFile = await ServerNs.uploadFile(wrapper.request, body, profile);
+
+      if(profileFile == null){
+        return generateResultError(HttpCodes.error_notUpload);
+      }
+
+      mediaId = await CommonMethods.insertMedia(profileFile);
+    }
+
+    if(wrapper.bodyJSON['delete_media_id'] != null){ // is edit mode
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(wrapper.bodyJSON['delete_media_id']);
+    }
+
+    final result = await CommonMethods.upsetSpeaker(wrapper.bodyJSON, mediaId);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not upsert speaker');
+    }
+
+    final res = generateResultOk();
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> deleteSpeaker(GraphHandlerWrap wrapper) async{
+    final speakerId = wrapper.bodyJSON[Keys.id];
+
+    if(speakerId == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final mediaId = await CommonMethods.getMediaIdFromSpeaker(speakerId);
+
+    if(mediaId != null) {
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(mediaId);
+    }
+
+    final result = await CommonMethods.deleteSpeaker(speakerId);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete speaker');
+    }
+
+    final res = generateResultOk();
 
     return res;
   }

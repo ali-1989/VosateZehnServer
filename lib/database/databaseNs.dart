@@ -873,7 +873,7 @@ class DatabaseNs {
        description varchar(500) DEFAULT NULL,
        media_id BIGINT DEFAULT NULL,
        date TIMESTAMP DEFAULT (now() at time zone 'utc'),
-       is_deleted BOOLEAN DEFAULT false,
+       is_hide BOOLEAN DEFAULT false,
        CONSTRAINT pk_#tb PRIMARY KEY (id)
       );
       '''.replaceAll('#tb', DbNames.T_speaker);

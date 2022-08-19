@@ -64,6 +64,61 @@ class QueryList {
     return q;
   }
 
+  static String getSubBuckets(SearchFilterTool sf){
+    var q = '''SELECT * FROM #tb WHERE (#w) AND
+        parent_id = #pId
+        order by date DESC
+        limit #lim
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_SubBucket);
+    q = q.replaceFirst('#lim', '${sf.limit}');
+
+    var w = 'true';
+
+    if(sf.filters['is_hide'] == null){
+      w = 'is_hide = false';
+    }
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+      w += ' AND (title like $t OR description like $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
+
+  static String getSubBucketsCount(SearchFilterTool sf){
+    var q = '''SELECT count(id) as count FROM #tb WHERE (#w) AND
+        parent_id = #pId
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_SubBucket);
+
+    var w = 'true';
+
+    if(sf.filters['is_hide'] == null){
+      w = 'is_hide = false';
+    }
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+      w += ' AND (title like $t OR description like $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
+
   static String getMediasByIds(){
     //, screenshot_path as screenshot_uri
     final q = '''

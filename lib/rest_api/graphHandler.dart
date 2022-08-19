@@ -381,18 +381,18 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    var image = wrapper.bodyJSON['image'];
+    var cover = wrapper.bodyJSON['image'];
     int? mediaId;
 
-    if(image is String){
+    if(cover is String){
       final body = wrapper.request.store.get('Body');
-      final savedFile = await ServerNs.uploadFile(wrapper.request, body, image);
+      final coverFile = await ServerNs.uploadFile(wrapper.request, body, cover);
 
-      if(savedFile == null){
+      if(coverFile == null){
         return generateResultError(HttpCodes.error_notUpload);
       }
 
-      mediaId = await CommonMethods.insertMedia(savedFile);
+      mediaId = await CommonMethods.insertMedia(coverFile);
     }
 
     if(wrapper.bodyJSON['delete_media_id'] != null){ // is edit mode
@@ -422,33 +422,46 @@ class GraphHandler {
     }
 
     var cover = wrapper.bodyJSON['cover'];
-    var videoAudio = wrapper.bodyJSON['media'];
+    var media = wrapper.bodyJSON['media'];
+    File? mediaFile;
+    int? mediaId;
     int? coverId;
 
-    final body = wrapper.request.store.get('Body');
-
-    final mediaFile = await ServerNs.uploadFile(wrapper.request, body, videoAudio);
-
-    if(mediaFile == null){
+    if(media == null && subBucketData['id'] == null){
       return generateResultError(HttpCodes.error_notUpload);
     }
 
-    if(subBucketData['duration'] == null){
-      var args = ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=duration',
-        '-of', 'default=noprint_wrappers=1:nokey=1', mediaFile.path];
+    if(media != null) {
+      final body = wrapper.request.store.get('Body');
+      mediaFile = await ServerNs.uploadFile(wrapper.request, body, media);
+    }
 
+    if(subBucketData['duration'] == null){
       try {
+        final args = ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=duration',
+          '-of', 'default=noprint_wrappers=1:nokey=1', mediaFile?.path?? ''];
+
         final result = await Process.run('ffprobe', args);
         var d = Duration(seconds: double.parse(result.stdout).toInt());
 
         subBucketData['duration'] = d.inMilliseconds;
       }
-      catch (e){print(e);}
+      catch (e){/**/}
     }
 
-    int? mediaId = await CommonMethods.insertMedia(mediaFile);
+    if(mediaFile != null) {
+      mediaId = await CommonMethods.insertMedia(
+        mediaFile,
+        duration: subBucketData['duration'],
+        fileName: wrapper.bodyJSON[Keys.fileName],
+      );
+    }
+    else {
+      mediaId = subBucketData['media_id'];
+    }
 
     if(cover is String){
+      final body = wrapper.request.store.get('Body');
       final coverFile = await ServerNs.uploadFile(wrapper.request, body, cover);
 
       if(coverFile == null){
@@ -461,6 +474,11 @@ class GraphHandler {
     if(wrapper.bodyJSON['delete_cover_id'] != null){ // is edit mode
       // ignore: unawaited_futures
       CommonMethods.deleteMedia(wrapper.bodyJSON['delete_cover_id']);
+    }
+
+    if(wrapper.bodyJSON['delete_media_id'] != null){ // is edit mode
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(wrapper.bodyJSON['delete_media_id']);
     }
 
     final result = await CommonMethods.upsetSubBucket(wrapper.bodyJSON, coverId, mediaId, null);
@@ -533,20 +551,39 @@ class GraphHandler {
   }
 
   static Future<Map<String, dynamic>> getSubBucketData(GraphHandlerWrap wrapper) async{
-    final modelId = wrapper.bodyJSON[Keys.id];
+    final parentId = wrapper.bodyJSON[Keys.id];
 
-    if(modelId == null){
+    if(parentId == null){
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    /*final r = await CommonMethods.setTicket(wrapper.userId!, data);
+    final buckets = await CommonMethods.getSubBuckets(wrapper.bodyJSON);
 
-    if(r == null || r < 1) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set ticket');
-    }*/
+    if(buckets == null) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not get sub-bucket');
+    }
+
+    final count = await CommonMethods.getSubBucketsCount(wrapper.bodyJSON);
+
+    var mediaIds = <int>{};
+
+    for(final k in buckets){
+      if(k['media_id'] != null){
+        mediaIds.add(k['media_id']);
+      }
+
+      if(k['cover_id'] != null){
+        mediaIds.add(k['cover_id']);
+      }
+    }
+
+    //todo: get content_id then get media_id
+    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
 
     final res = generateResultOk();
-    res.addAll(FakeAndHack.simulate_getLevel2(wrapper));
+    res['sub_bucket_list'] = buckets;
+    res['media_list'] = mediaList?? [];
+    res['all_count'] = count;
 
     return res;
   }

@@ -891,10 +891,12 @@ class DatabaseNs {
       );
       '''.replaceAll('#tb', DbNames.T_Bucket);
 
+
+  // type: 1> video,   2> audio
   static final String QTbl_SubBucket = '''
   CREATE TABLE IF NOT EXISTS #tb (
        id BIGSERIAL,
-       parent_id BIGINT DEFAULT NULL,
+       parent_id BIGINT NOT NULL,
        cover_id BIGINT DEFAULT NULL,
        media_id BIGINT DEFAULT NULL,
        title varchar(150) NOT NULL,
@@ -908,6 +910,7 @@ class DatabaseNs {
        CONSTRAINT pk_#tb PRIMARY KEY (id)
       );
       '''.replaceAll('#tb', DbNames.T_SubBucket);
+
 
   static final String QTbl_SubBucketContent = '''
   CREATE TABLE IF NOT EXISTS #tb (

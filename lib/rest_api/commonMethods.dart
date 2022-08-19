@@ -288,6 +288,40 @@ class CommonMethods {
     return true;
   }
 
+  static Future<List<Map>?> getSubBuckets(Map jsData) async {
+    final pId = jsData[Keys.id];
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getSubBuckets(sf);
+    q = q.replaceFirst('#pId', '$pId');
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
+  }
+
+  static Future<int> getSubBucketsCount(Map jsData) async {
+    final parentId = jsData[Keys.id];
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getSubBucketsCount(sf);
+    q = q.replaceFirst('#pId', '$parentId');
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return 0;
+    }
+
+    return cursor.elementAt(0).toList()[0];
+  }
+
   static Future<bool> deleteBucket(int bucketId) async {
     return (await PublicAccess.psql2.delete(DbNames.T_Bucket, 'id = $bucketId')) > 0;
   }
@@ -340,7 +374,7 @@ class CommonMethods {
   }
 
   static Future<int> insertMedia(File file, {
-    String? title, String? file_name,
+    String? title, String? fileName,
     String? extension, int? duration,
     int? width, int? height,
   }) async {
@@ -366,8 +400,8 @@ class CommonMethods {
       kv['extension'] = extension;
     }
 
-    if(file_name != null){
-      kv['file_name'] = file_name;
+    if(fileName != null){
+      kv['file_name'] = fileName;
     }
 
     if(title != null){

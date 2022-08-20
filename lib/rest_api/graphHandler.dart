@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:alfred/alfred.dart';
+import 'package:assistance_kit/api/converter.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
+import 'package:assistance_kit/api/helpers/listHelper.dart';
 import 'package:vosate_zehn_server/database/models/userBlockList.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCountry.dart';
@@ -13,7 +15,6 @@ import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/ServerNs.dart';
 import 'package:vosate_zehn_server/rest_api/adminCommands.dart';
 import 'package:vosate_zehn_server/rest_api/commonMethods.dart';
-import 'package:vosate_zehn_server/rest_api/fakeAndHack.dart';
 import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
 import 'package:vosate_zehn_server/rest_api/loginZone.dart';
 import 'package:vosate_zehn_server/rest_api/registerZone.dart';
@@ -54,8 +55,8 @@ class GraphHandler {
       bJSON = body;
     }
 
-    req.store.set('Body', body);
     PublicAccess.logInDebug(bJSON.toString());
+    req.store.set('Body', body);
 
     final request = bJSON[Keys.requestZone];
     dynamic requesterId = bJSON[Keys.requesterId];
@@ -72,7 +73,7 @@ class GraphHandler {
     if (request == null) {
       return generateResultError(HttpCodes.error_zoneKeyNotFound);
     }
-    
+
     if (requesterId != null) {
       final token = bJSON[Keys.token];
 
@@ -234,6 +235,10 @@ class GraphHandler {
 
     if (request == 'get_bucket_content_data') {
       return getBucketContentData(wrapper);
+    }
+
+    if (request == 'upsert_bucket_content') {
+      return upsertBucketContent(wrapper);
     }
 
     if (request == 'upsert_speaker') {
@@ -505,7 +510,6 @@ class GraphHandler {
     }
 
     final res = generateResultOk();
-
     return res;
   }
 
@@ -594,7 +598,6 @@ class GraphHandler {
       }
     }
 
-    //todo: get content_id then get media_id
     final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
 
     final res = generateResultOk();
@@ -605,21 +608,108 @@ class GraphHandler {
     return res;
   }
 
-  static Future<Map<String, dynamic>> getBucketContentData(GraphHandlerWrap wrapper) async{
-    final bucketId = wrapper.bodyJSON[Keys.id];
+  static Future<Map<String, dynamic>> upsertBucketContent(GraphHandlerWrap wrapper) async{
+    final List? medias = wrapper.bodyJSON['medias_parts'];
+    final Map? mediasInfo = wrapper.bodyJSON['medias_info'];
+    final speaker = wrapper.bodyJSON['speaker'];
 
-    if(bucketId == null){
+    if(medias == null || mediasInfo == null || speaker == null){
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    /*final r = await CommonMethods.setTicket(wrapper.userId!, data);
+    final mediaIdList = <int>[];
+    final speakerId = speaker['id'];
 
-    if(r == null || r < 1) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set ticket');
-    }*/
+    final body = wrapper.request.store.get('Body');
+
+    for(final k in medias){
+      final mediaFile = await ServerNs.uploadFile(wrapper.request, body, k);
+
+      if(mediaFile == null){
+        return generateResultError(HttpCodes.error_notUpload);
+      }
+
+      final info = mediasInfo[k];
+
+      if(info['duration'] == null){
+        try {
+          final args = ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=duration',
+            '-of', 'default=noprint_wrappers=1:nokey=1', mediaFile.path];
+
+          final result = await Process.run('ffprobe', args);
+          var d = Duration(seconds: double.parse(result.stdout).toInt());
+
+          info['duration'] = d.inMilliseconds;
+        }
+        catch (e){/**/}
+      }
+
+      final mediaId = await CommonMethods.insertMedia(
+        mediaFile,
+        duration: info['duration'],
+        extension: info['extension'],
+        fileName: info[Keys.fileName],
+      );
+
+      mediaIdList.add(mediaId);
+    }
+
+    if(wrapper.bodyJSON['delete_cover_id'] != null){ // is edit mode
+      // ignore: unawaited_futures
+      CommonMethods.deleteMedia(wrapper.bodyJSON['delete_cover_id']);
+    }
+
+    final deletedIds = wrapper.bodyJSON['delete_media_ids'];
+
+    if(deletedIds != null){ // is edit mode
+      for(final k in deletedIds){
+        // ignore: unawaited_futures
+        CommonMethods.deleteMedia(k);
+      }
+    }
+
+    final result = await CommonMethods.upsetBucketContent(wrapper.bodyJSON, speakerId, mediaIdList);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not upsert content');
+    }
 
     final res = generateResultOk();
-    res.addAll(FakeAndHack.simulate_getLevel2Content(wrapper));
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getBucketContentData(GraphHandlerWrap wrapper) async{
+    final subBucketId = wrapper.bodyJSON[Keys.id];
+
+    if(subBucketId == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final content = await CommonMethods.getBucketContent(wrapper.bodyJSON);
+
+    if(content == null) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not get content of bucket');
+    }
+
+    //final count = await CommonMethods.getSubBucketsCount(wrapper.bodyJSON);
+    final speakerId = content['speaker_id'];
+    final speaker = await CommonMethods.getSpeaker(speakerId);
+
+    var mediaIds = <int>{};
+
+    if(speaker != null && speaker['media_id'] != null) {
+      mediaIds.add(speaker['media_id']);
+    }
+
+    mediaIds.addAll(Converter.correctList<int>(content['media_ids'])!);
+
+    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+
+    final res = generateResultOk();
+    res['content'] = content;
+    res['media_list'] = mediaList?? [];
+    res['speaker'] = speaker;
+    //res['all_count'] = count;
 
     return res;
   }

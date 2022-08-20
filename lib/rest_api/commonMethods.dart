@@ -1,5 +1,6 @@
 import 'dart:core';
 import 'dart:io';
+import 'package:assistance_kit/api/converter.dart';
 import 'package:assistance_kit/api/helpers/textHelper.dart';
 import 'package:assistance_kit/database/psql2.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
@@ -447,6 +448,18 @@ class CommonMethods {
     }).toList();
   }
 
+  static Future<Map?> getSpeaker(int id) async {
+    var q = QueryList.getSpeaker(id);
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <String, dynamic>{};
+    }
+
+    return cursor[0].toMap() as Map<String, dynamic>;
+  }
+
   static Future<int> getSpeakersCount(Map jsData) async {
     final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
 
@@ -500,6 +513,46 @@ class CommonMethods {
   static Future<int?> getMediaIdFromSpeaker(int bucketId) async {
     final q = 'SELECT media_id FROM ${DbNames.T_speaker} WHERE id = $bucketId;';
     return await PublicAccess.psql2.getColumn(q, 'media_id');
+  }
+
+  static Future<bool> upsetBucketContent(Map jsData, int speakerId, List<int> mediaIds) async {
+    final pId = jsData['parent_id'];
+    final id = jsData[Keys.id]?? -1;
+    final currentMediaIds = Converter.correctList<int>(jsData['current_media_ids'])?? <int>[];
+
+    currentMediaIds.addAll(mediaIds);
+
+    final kv = <String, dynamic>{};
+    kv['parent_id'] = pId;
+    kv['speaker_id'] = speakerId;
+    kv['media_ids'] = Psql2.listToPgIntArray(currentMediaIds);
+
+    /*if(bucketData['date'] != null) {
+      kv['date'] = bucketData['date'];
+    }*/
+
+    var cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_BucketContent, kv, where: ' id = $id');
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static Future<Map?> getBucketContent(Map jsData) async {
+    final pId = jsData[Keys.id];
+    //final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getBucketContentByParent(pId);
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <String, dynamic>{};
+    }
+
+    return cursor[0].toMap() as Map<String, dynamic>;
   }
 
 

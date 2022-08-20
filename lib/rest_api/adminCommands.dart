@@ -11,6 +11,7 @@ class AdminCommands {
     'delete_bucket',
     'upsert_sub_bucket',
     'delete_sub_bucket',
+    'upsert_bucket_content',
     'upsert_speaker',
     'delete_speaker',
   ];

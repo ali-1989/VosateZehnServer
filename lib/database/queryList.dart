@@ -136,6 +136,16 @@ class QueryList {
     return q;
   }
 
+  static String getSpeaker(int id){
+    var q = '''SELECT * FROM #tb WHERE id = #id 
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_speaker);
+    q = q.replaceFirst('#id', '$id');
+
+    return q;
+  }
+
   static String getSpeakers(SearchFilterTool sf){
     var q = '''SELECT * FROM #tb WHERE (#w) 
         order by date DESC
@@ -178,6 +188,28 @@ class QueryList {
     }
 
     q = q.replaceFirst('#w', w);
+    return q;
+  }
+
+  static String getBucketContent(int cId){
+    var q = '''SELECT * FROM #tb WHERE
+        id = #id
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_BucketContent);
+    q = q.replaceFirst('#id', '$cId');
+
+    return q;
+  }
+
+  static String getBucketContentByParent(int pId){
+    var q = '''SELECT * FROM #tb WHERE
+        parent_id = #pId
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_BucketContent);
+    q = q.replaceFirst('#pId', '$pId');
+
     return q;
   }
 

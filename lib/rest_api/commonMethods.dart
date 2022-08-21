@@ -258,6 +258,11 @@ class CommonMethods {
     return await PublicAccess.psql2.getColumn(q, 'media_id');
   }
 
+  static Future<List<int>?> findSubBucketIdsByBucket(int bucketId) async {
+    final q = 'SELECT id FROM ${DbNames.T_SubBucket} WHERE parent_id = $bucketId;';
+    return await PublicAccess.psql2.getColumnAsList<int>(q, 'id');
+  }
+
   static Future deleteMedia(int mediaId) async {
     final q = 'SELECT media_path FROM ${DbNames.T_Media} WHERE id = $mediaId;';
     final oldRelPath = await PublicAccess.psql2.getColumn(q, 'media_path');
@@ -420,16 +425,41 @@ class CommonMethods {
 
   static Future<int?> getMediaIdFromSubBucket(int subBucketId) async {
     final q = 'SELECT media_id FROM ${DbNames.T_SubBucket} WHERE id = $subBucketId;';
-    return await PublicAccess.psql2.getColumn(q, 'media_id');
+    return await PublicAccess.psql2.getColumn<int>(q, 'media_id');
   }
 
   static Future<int?> getCoverIdFromSubBucket(int bucketId) async {
     final q = 'SELECT cover_id FROM ${DbNames.T_SubBucket} WHERE id = $bucketId;';
-    return await PublicAccess.psql2.getColumn(q, 'cover_id');
+    return await PublicAccess.psql2.getColumn<int>(q, 'cover_id');
   }
 
-  static Future<bool> deleteSubBucket(int subBucketId) async {
-    return (await PublicAccess.psql2.delete(DbNames.T_SubBucket, 'id = $subBucketId')) > 0;
+  static Future<int?> deleteSubBucket(int subBucketId) async {
+    final res = await PublicAccess.psql2.deleteReturning(DbNames.T_SubBucket, 'id = $subBucketId', returning: 'content_id');
+
+    if(res == null || res.isEmpty){
+      return null;
+    }
+
+    final l = res[0].toList();
+
+    return l.isNotEmpty? l[0] : null;
+  }
+
+  static Future<bool> deleteContentAndMedias(int contentId) async {
+    final res = await PublicAccess.psql2.deleteReturning(DbNames.T_BucketContent, 'id = $contentId', returning: 'media_ids');
+
+    if(res == null || res.isEmpty){
+      return false;
+    }
+
+    final ids = res[0].toList()[0];
+
+    for(final k in ids){
+      // ignore: unawaited_futures
+      deleteMedia(k);
+    }
+
+    return true;
   }
 
   static Future<List<Map>?> getSpeakers(Map jsData) async {
@@ -515,7 +545,7 @@ class CommonMethods {
     return await PublicAccess.psql2.getColumn(q, 'media_id');
   }
 
-  static Future<bool> upsetBucketContent(Map jsData, int speakerId, List<int> mediaIds) async {
+  static Future<int> upsetBucketContent(Map jsData, int speakerId, List<int> mediaIds) async {
     final pId = jsData['parent_id'];
     final id = jsData[Keys.id]?? -1;
     final currentMediaIds = Converter.correctList<int>(jsData['current_media_ids'])?? <int>[];
@@ -531,7 +561,20 @@ class CommonMethods {
       kv['date'] = bucketData['date'];
     }*/
 
-    var cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_BucketContent, kv, where: ' id = $id');
+    var cursor = await PublicAccess.psql2.upsertWhereKvReturning(DbNames.T_BucketContent, kv, where: ' id = $id', returning: 'id');
+
+    if (cursor == null || cursor.isEmpty) {
+      return -1;
+    }
+
+    return cursor[0].toList()[0];
+  }
+
+  static Future<bool> setContentIdToSubBucket(int subId, int contentId) async {
+    final kv = <String, dynamic>{};
+    kv['content_id'] = contentId;
+
+    var cursor = await PublicAccess.psql2.updateKv(DbNames.T_SubBucket, kv, ' id = $subId');
 
     if (cursor == null || cursor < 1) {
       return false;
@@ -804,10 +847,10 @@ class CommonMethods {
       where = ' id = $msgId AND sender_user_id = $userId ';
     }
 
-    final cursor = await PublicAccess.psql2.delete(DbNames.T_TicketMessage, where, returning: 'media_id');
+    final cursor = await PublicAccess.psql2.deleteReturning(DbNames.T_TicketMessage, where, returning: 'media_id');
 
     if(cursor is String || cursor is int){
-      return deleteMediaMessage(userId, cursor);
+      return null;//deleteMediaMessage(userId, cursor);
     }
 
     return null;

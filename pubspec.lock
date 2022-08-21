@@ -112,7 +112,7 @@ packages:
       name: file
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "6.1.2"
+    version: "6.1.4"
   frontend_server_client:
     dependency: transitive
     description:
@@ -133,7 +133,7 @@ packages:
       name: http
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.13.4"
+    version: "0.13.5"
   http_multi_server:
     dependency: transitive
     description:
@@ -238,14 +238,14 @@ packages:
       name: postgres
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.4.5"
+    version: "2.4.6"
   postgresql2:
     dependency: transitive
     description:
       name: postgresql2
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.0"
+    version: "1.0.3"
   pub_semver:
     dependency: transitive
     description:

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:alfred/alfred.dart';
 import 'package:assistance_kit/api/converter.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
-import 'package:assistance_kit/api/helpers/listHelper.dart';
 import 'package:vosate_zehn_server/database/models/userBlockList.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCountry.dart';
@@ -528,9 +527,17 @@ class GraphHandler {
     }
 
     final result = await CommonMethods.deleteBucket(bucketId);
-//todo: must delete subBucket & content
+
     if(!result) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete bucket');
+    }
+
+    final subIds = await CommonMethods.findSubBucketIdsByBucket(bucketId);
+
+    if(subIds != null){
+      for(final k in subIds){
+        await deleteSubBucket(null, subBucketId: k);
+      }
     }
 
     final res = generateResultOk();
@@ -654,10 +661,6 @@ class GraphHandler {
       mediaIdList.add(mediaId);
     }
 
-    if(wrapper.bodyJSON['delete_cover_id'] != null){ // is edit mode
-      // ignore: unawaited_futures
-      CommonMethods.deleteMedia(wrapper.bodyJSON['delete_cover_id']);
-    }
 
     final deletedIds = wrapper.bodyJSON['delete_media_ids'];
 
@@ -668,11 +671,14 @@ class GraphHandler {
       }
     }
 
-    final result = await CommonMethods.upsetBucketContent(wrapper.bodyJSON, speakerId, mediaIdList);
+    final contentId = await CommonMethods.upsetBucketContent(wrapper.bodyJSON, speakerId, mediaIdList);
 
-    if(!result) {
+    if(contentId < 0) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not upsert content');
     }
+
+    final pId = wrapper.bodyJSON['parent_id'];
+    await CommonMethods.setContentIdToSubBucket(pId, contentId);
 
     final res = generateResultOk();
     return res;
@@ -692,7 +698,7 @@ class GraphHandler {
     }
 
     //final count = await CommonMethods.getSubBucketsCount(wrapper.bodyJSON);
-    final speakerId = content['speaker_id'];
+    final speakerId = content['speaker_id']?? 0;
     final speaker = await CommonMethods.getSpeaker(speakerId);
 
     var mediaIds = <int>{};
@@ -701,7 +707,9 @@ class GraphHandler {
       mediaIds.add(speaker['media_id']);
     }
 
-    mediaIds.addAll(Converter.correctList<int>(content['media_ids'])!);
+    if(content['media_ids'] != null) {
+      mediaIds.addAll(Converter.correctList<int>(content['media_ids'])!);
+    }
 
     final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
 
@@ -714,35 +722,36 @@ class GraphHandler {
     return res;
   }
 
-  static Future<Map<String, dynamic>> deleteSubBucket(GraphHandlerWrap wrapper) async{
-    final subBucketId = wrapper.bodyJSON[Keys.id];
+  static Future<Map<String, dynamic>> deleteSubBucket(GraphHandlerWrap? wrapper, {int? subBucketId}) async{
+    final subBucket_Id = subBucketId?? wrapper!.bodyJSON[Keys.id];
 
-    if(subBucketId == null){
+    if(subBucket_Id == null){
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    final mediaId = await CommonMethods.getMediaIdFromSubBucket(subBucketId);
+    final mediaId = await CommonMethods.getMediaIdFromSubBucket(subBucket_Id);
 
     if(mediaId != null) {
       // ignore: unawaited_futures
       CommonMethods.deleteMedia(mediaId);
     }
 
-    final coverId = await CommonMethods.getCoverIdFromSubBucket(subBucketId);
+    final coverId = await CommonMethods.getCoverIdFromSubBucket(subBucket_Id);
 
     if(coverId != null) {
       // ignore: unawaited_futures
       CommonMethods.deleteMedia(coverId);
     }
 
-    final result = await CommonMethods.deleteSubBucket(subBucketId);
-//todo: must delete content
-    if(!result) {
+    final contentId = await CommonMethods.deleteSubBucket(subBucket_Id);
+
+    if(contentId == null) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete sub-bucket');
     }
 
-    final res = generateResultOk();
+    await CommonMethods.deleteContentAndMedias(contentId);
 
+    final res = generateResultOk();
     return res;
   }
 
@@ -897,7 +906,7 @@ class GraphHandler {
     WsMessenger.sendToAllUserDevice(userId, JsonHelper.mapToJson(match));
 
     //--- To other user chats ------------------------------------
-    WsMessenger.sendDataToOtherUserChats(userId, 'todo');
+    WsMessenger.sendDataToOtherUserChats(userId, 'tod');
 
     return res;
   }

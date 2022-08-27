@@ -31,6 +31,13 @@ class ServerNs {
       }
     );
 
+    server.post('/*', (req, res) {
+        res.headers.add('Access-Control-Allow-Origin', '*');
+        res.headers.add('Access-Control-Allow-Headers', '*');
+        res.headers.add('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, HEAD');
+      }
+    );
+
     server.post('/graph-v1', GraphHandler.response);
     server.post('/management', ManagementResponse.response);
     server.all('/echo', echoResponse);

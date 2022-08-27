@@ -28,8 +28,8 @@ class PathsNs {
     dir = Directory(getAppsFilesDir());
     dir.create(recursive: true);
 
-    dir = Directory(getChatFileDir());
-    dir.create(recursive: true);
+    //dir = Directory(getChatFileDir());
+    //dir.create(recursive: true);
 
     dir = Directory(getAssetsDir());
     dir.create(recursive: true);

@@ -161,18 +161,18 @@ class CronAssistance {
   }
   ///===================================================================================================
   static void startCronJobs() {
-    var tehranTZ = 'Asia/Tehran';
+    final tehranTZ = 'Asia/Tehran';
 
-    var deleteJunk = CronJob.createExactCronJob(tehranTZ, 2, 40, OneHour * 24, CronAssistance.jFun_deleteJunkFile, true);
+    final deleteJunk = CronJob.createExactCronJob(tehranTZ, 2, 40, OneHour * 24, CronAssistance.jFun_deleteJunkFile, true);
     deleteJunk.start();
 
-    var vacuumDBJob = CronJob.createExactCronJob(tehranTZ, 3, 10, OneHour * 24, CronAssistance.jFun_vacuumDB, false);
+    final vacuumDBJob = CronJob.createExactCronJob(tehranTZ, 3, 10, OneHour * 24, CronAssistance.jFun_vacuumDB, false);
     vacuumDBJob.start();
 
-    var backupDBJob = CronJob.createExactCronJob(tehranTZ, 3, 30, OneHour * 24, CronAssistance.jFun_backupDB, false);
+    final backupDBJob = CronJob.createExactCronJob(tehranTZ, 3, 30, OneHour * 24, CronAssistance.jFun_backupDB, false);
     backupDBJob.start();
 
-    var checkAllWsSession = CronJob.createCronJob(OneHour * 2, CronAssistance.jFun_checkAllDbWsSessions);
+    final checkAllWsSession = CronJob.createCronJob(OneHour * 2, CronAssistance.jFun_checkAllDbWsSessions);
     checkAllWsSession.start();
 
     final clearSystemCache = CronJob.createCronJob(OneHour * 8, CronAssistance.jFun_clearSystemCache);

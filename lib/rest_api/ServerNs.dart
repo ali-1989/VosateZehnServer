@@ -31,7 +31,7 @@ class ServerNs {
       }
     );
 
-    server.post('/*', (req, res) {
+    server.all('/*', (req, res) {
         res.headers.add('Access-Control-Allow-Origin', '*');
         res.headers.add('Access-Control-Allow-Headers', '*');
         res.headers.add('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, HEAD');

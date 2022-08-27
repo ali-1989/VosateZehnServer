@@ -8,5 +8,12 @@
       <jdbc-url>jdbc:postgresql://localhost:5432/VZehnDB</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="vosat@server" uuid="4a8028ed-b4fd-4cc7-94b9-fe526355a462">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://162.223.90.121:5432/VZehnDB</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

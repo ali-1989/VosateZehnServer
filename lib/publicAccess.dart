@@ -23,7 +23,7 @@ class PublicAccess {
   static Map<WebSocket, String> webSockets = <WebSocket, String>{};
   static String verifyHackCode = '68073';
   //static String domain = 'http://162.223.90.121:${Constants.port}';
-  static String domain = 'http://192.168.43.140:${Constants.port}'; //1.103 , 43.140
+  static String domain = 'http://vosatezehn.com:${Constants.port}'; //1.103 , 43.140
   static late Logger logger;
   static final developerMobileNumber = '09139277303';
   static int systemUserId = 90;

@@ -89,10 +89,14 @@ class DeviceCellarModelDb extends DbModel {
     api = map['api'];
     device_type = map['device_type'];
     import_date = map['import_date'];
+
+    normalization();
   }
 
   @override
   Map<String, dynamic> toMap() {
+    normalization();
+
     final map = <String, dynamic>{};
 
     map[Keys.deviceId] = device_id;
@@ -107,6 +111,20 @@ class DeviceCellarModelDb extends DbModel {
     }
 
     return map;
+  }
+
+  void normalization(){
+    if(brand != null && brand!.length > 100){
+      brand = brand!.substring(0, 99);
+    }
+
+    if(model != null && model!.length > 50){
+      model = model!.substring(0, 49);
+    }
+
+    if(api != null && api!.length > 15){
+      api = api!.substring(0, 14);
+    }
   }
 
   static Future<bool> upsertModel(DeviceCellarModelDb model) async {

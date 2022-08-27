@@ -10,7 +10,7 @@ environment:
   sdk: '>=2.15.0'
 
 dependencies:
-  alfred: 0.1.5+1                      # Edited
+  alfred: 0.1.5+3                      # Edited[alfred.dart, store_plugin,]
   timezone_utc_offset: ^1.1.0
   dio: 4.0.6
   http: ^0.13.5

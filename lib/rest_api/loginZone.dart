@@ -19,7 +19,7 @@ class LoginZone {
   LoginZone._();
 
   static String generateToken(){
-    return Generator.generateKey(40);
+    return Generator.generateKey(100);
   }
 
   static Future<Map<String, dynamic>> loginByUserName(GraphHandlerWrap wrapper) async {

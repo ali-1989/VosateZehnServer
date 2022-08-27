@@ -22,14 +22,14 @@ class PublicAccess {
   static late Psql2 psql2;
   static Map<WebSocket, String> webSockets = <WebSocket, String>{};
   static String verifyHackCode = '68073';
-  //static String domain = 'http://162.223.90.121:${Constants.port}';
-  static String domain = 'http://vosatezehn.com:${Constants.port}'; //1.103 , 43.140
   static late Logger logger;
   static final developerMobileNumber = '09139277303';
   static int systemUserId = 90;
   static int adminUserId = 89;
   static String otpHackCode = '6800';
   static List<String> avoidForLimitedUser = ['is_deleted', 'register_date', 'user_type'];
+  //static String domain = 'http://162.223.90.121:${Constants.port}'; //1.103 , 43.140
+  static String domain = 'http://vosatezehn.com:${Constants.port}';
 
   static void logInDebug(dynamic txt) {
     if(isDebugMode) {

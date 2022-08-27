@@ -10,10 +10,12 @@ class WebNs {
   static Alfred prepareServer(){
     var server = Alfred(logLevel: LogType.info);
 
-    //server.all('/*', (req, res) {
-    //   PublicAccess.logInDebug('====== method: ${req.method}, uri: ${req.uri}');
-    //});
-
+    server.all('/*', (req, res) {
+      res.headers.add('Access-Control-Allow-Origin', '*');
+      res.headers.add('Access-Control-Allow-Headers', '*');
+      res.headers.add('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, HEAD');
+    }
+    );
 
     //server.all('/echo', echoResponse);
     server.get('/admin/*', WebFileHandler.fileResponse);

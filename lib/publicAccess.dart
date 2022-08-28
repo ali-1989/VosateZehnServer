@@ -28,7 +28,7 @@ class PublicAccess {
   static int adminUserId = 89;
   static String otpHackCode = '6800';
   static List<String> avoidForLimitedUser = ['is_deleted', 'register_date', 'user_type'];
-  //static String domain = 'http://162.223.90.121:${Constants.port}'; //1.103 , 43.140
+  //static String domain = 'http://192.168.1.103:${Constants.port}'; //1.103 , 43.140
   static String domain = 'http://vosatezehn.com:${Constants.port}';
 
   static void logInDebug(dynamic txt) {

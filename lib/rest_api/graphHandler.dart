@@ -117,7 +117,7 @@ class GraphHandler {
     }
     catch (e){
       PublicAccess.logInDebug('>>> Error in process graph-request:\n$e');
-      rethrow;
+      //rethrow;
     }
   }
   ///==========================================================================================================
@@ -745,11 +745,9 @@ class GraphHandler {
 
     final contentId = await CommonMethods.deleteSubBucket(subBucket_Id);
 
-    if(contentId == null) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete sub-bucket');
+    if(contentId != null) {
+      await CommonMethods.deleteContentAndMedias(contentId);
     }
-
-    await CommonMethods.deleteContentAndMedias(contentId);
 
     final res = generateResultOk();
     return res;

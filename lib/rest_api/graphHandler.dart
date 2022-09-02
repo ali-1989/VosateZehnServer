@@ -208,6 +208,10 @@ class GraphHandler {
       return setTicketData(wrapper);
     }
 
+    if (request == 'get_tickets') {
+      return getTickets(wrapper);
+    }
+
     if (request == 'upsert_bucket') {
       return upsertBucket(wrapper);
     }
@@ -389,6 +393,38 @@ class GraphHandler {
     }
 
     final res = generateResultOk();
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getTickets(GraphHandlerWrap wrapper) async{
+    final tickets = await CommonMethods.getTickets(wrapper.bodyJSON);
+    final senderIds = <int>{};
+
+    for(final k in tickets){
+      if(k['sender_user_id'] != null){
+        senderIds.add(k['sender_user_id']);
+      }
+    }
+
+    final customers = await CommonMethods.getCustomersForIds(senderIds.toList());
+
+
+    /*final mediaIds = <int>{};
+
+    for(final k in customer){
+      if(k['media_id'] != null){
+        mediaIds.add(k['media_id']);
+      }
+    }
+
+    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+    */
+    final res = generateResultOk();
+    res['ticket_list'] = tickets;
+    res['customer_list'] = customers;
+    //res['media_list'] = mediaList?? [];
+    //res['all_count'] = count;
 
     return res;
   }

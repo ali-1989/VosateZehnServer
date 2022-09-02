@@ -9,6 +9,55 @@ import 'package:vosate_zehn_server/rest_api/searchFilterTool.dart';
 class QueryList {
   QueryList._();
 
+  static String getTickets(SearchFilterTool sf){
+    var q = '''SELECT * FROM #tb WHERE (#w)
+        order by send_date DESC
+        limit #lim
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_SimpleTicket);
+    q = q.replaceFirst('#lim', '${sf.limit}');
+
+    var w = 'is_deleted = false';
+
+    /*if(sf.filters['x'] == null){
+      w = 'is_hide = false';
+    }*/
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+      w += ' AND (data like $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (send_date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
+
+  static String getTicketsCount(SearchFilterTool sf){
+    var q = '''SELECT count(id) as count FROM #tb WHERE (#w) 
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_SimpleTicket);
+
+    var w = 'is_deleted = false';
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+      w += ' AND (data like $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (send_date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
+
   static String getBuckets(SearchFilterTool sf){
     var q = '''SELECT * FROM #tb WHERE (#w) AND
         bucket_type = #key

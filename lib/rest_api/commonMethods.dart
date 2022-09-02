@@ -598,6 +598,53 @@ class CommonMethods {
     return cursor[0].toMap() as Map<String, dynamic>;
   }
 
+  static Future<List<Map<String, dynamic>>> getTickets(Map jsData) async {
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    final q = QueryList.getTickets(sf);
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) => e.toMap() as Map<String, dynamic>).toList();
+  }
+
+  static Future<List<Map<String, dynamic>>> getCustomersForIds(List userIds) async {
+    final res = <Map<String, dynamic>>[];
+
+    if(userIds.isEmpty){
+      return res;
+    }
+
+    final getDataTypes = <UserDataType>{};
+
+    getDataTypes.add(UserDataType.personal);
+    getDataTypes.add(UserDataType.country);
+    //getDataTypes.add(UserDataType.currency);
+    getDataTypes.add(UserDataType.userName);
+    getDataTypes.add(UserDataType.mobileNumber);
+    getDataTypes.add(UserDataType.email);
+    getDataTypes.add(UserDataType.profileImage);
+
+    for(final uid in userIds) {
+      res.add(await _getInfoForUser(uid, getDataTypes));
+    }
+
+    return res;
+  }
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -14,6 +14,7 @@ class AdminCommands {
     'upsert_bucket_content',
     'upsert_speaker',
     'delete_speaker',
+    'get_tickets',
   ];
 
   static bool isAdminCommand(String request){

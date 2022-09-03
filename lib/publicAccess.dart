@@ -31,6 +31,20 @@ class PublicAccess {
   //static String domain = 'http://192.168.1.103:${Constants.port}'; //1.103 , 43.140
   static String domain = 'http://vosatezehn.com:${Constants.port}';
 
+  static bool isReleaseMode() {
+    /*var isInReleaseMode = true;
+
+    bool fn(){
+      isInReleaseMode = false;
+      return true;
+    }
+
+    assert(fn(), 'isInDebugMode');
+    return isInReleaseMode;*/
+
+    return const bool.fromEnvironment('dart.vm.product');
+  }
+
   static void logInDebug(dynamic txt) {
     if(isDebugMode) {
       PublicAccess.logger.logToAll(txt);

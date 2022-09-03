@@ -117,7 +117,10 @@ class GraphHandler {
     }
     catch (e){
       PublicAccess.logInDebug('>>> Error in process graph-request:\n$e');
-      //rethrow;
+
+      if(!PublicAccess.isReleaseMode()) {
+        rethrow;
+      }
     }
   }
   ///==========================================================================================================
@@ -241,6 +244,10 @@ class GraphHandler {
     }
 
     if (request == 'upsert_bucket_content') {
+      if(wrapper.bodyJSON.containsKey('sort_command')) {
+        return sortBucketContent(wrapper);
+      }
+
       return upsertBucketContent(wrapper);
     }
 
@@ -254,6 +261,14 @@ class GraphHandler {
 
     if (request == 'get_speaker_data') {
       return getSpeakerData(wrapper);
+    }
+
+    if (request == 'set_advertising') {
+      return setAdvertising(wrapper);
+    }
+
+    if (request == 'get_advertising_data') {
+      return getAdvertisingData(wrapper);
     }
 
 
@@ -409,21 +424,9 @@ class GraphHandler {
 
     final customers = await CommonMethods.getCustomersForIds(senderIds.toList());
 
-
-    /*final mediaIds = <int>{};
-
-    for(final k in customer){
-      if(k['media_id'] != null){
-        mediaIds.add(k['media_id']);
-      }
-    }
-
-    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
-    */
     final res = generateResultOk();
     res['ticket_list'] = tickets;
     res['customer_list'] = customers;
-    //res['media_list'] = mediaList?? [];
     //res['all_count'] = count;
 
     return res;
@@ -720,6 +723,25 @@ class GraphHandler {
     return res;
   }
 
+  static Future<Map<String, dynamic>> sortBucketContent(GraphHandlerWrap wrapper) async{
+    final List<int>? medias = wrapper.bodyJSON['media_ids'];
+    final parentId = wrapper.bodyJSON['parent_id'];
+    final contentId = wrapper.bodyJSON[Keys.id];
+
+    if(medias == null || parentId == null || contentId == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final isOk = await CommonMethods.sortBucketContent(contentId, medias);
+
+    if(isOk < 1) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not sort bucket content');
+    }
+
+    final res = generateResultOk();
+    return res;
+  }
+
   static Future<Map<String, dynamic>> getBucketContentData(GraphHandlerWrap wrapper) async{
     final subBucketId = wrapper.bodyJSON[Keys.id];
 
@@ -877,6 +899,71 @@ class GraphHandler {
 
     return res;
   }
+
+  static Future<Map<String, dynamic>> setAdvertising(GraphHandlerWrap wrapper) async{
+    final tag = wrapper.bodyJSON['tag'];
+
+    if(tag == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    var advMedia = wrapper.bodyJSON['media'];
+    int? mediaId;
+
+    if(advMedia is String){
+      final body = wrapper.request.store.get('Body');
+      final advMediaFile = await ServerNs.uploadFile(wrapper.request, body, advMedia);
+
+      if(advMediaFile == null){
+        return generateResultError(HttpCodes.error_notUpload);
+      }
+
+      mediaId = await CommonMethods.insertMedia(advMediaFile);
+    }
+
+    final result = await CommonMethods.insertAdvertising(wrapper.bodyJSON, mediaId);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not insert adv');
+    }
+
+    final res = generateResultOk();
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getAdvertisingData(GraphHandlerWrap wrapper) async{
+
+    final advertising = await CommonMethods.getAdvertising(wrapper.userId!, wrapper.bodyJSON);
+
+    if(advertising == null) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not get advertising');
+    }
+
+    var mediaIds = <int>{};
+
+    for(final k in advertising){
+      if(k['media_id'] != null){
+        mediaIds.add(k['media_id']);
+      }
+    }
+
+    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+
+    final res = generateResultOk();
+    res['advertising_list'] = advertising;
+    res['media_list'] = mediaList?? [];
+
+    return res;
+  }
+
+
+
+
+
+
+
+
 
 
 

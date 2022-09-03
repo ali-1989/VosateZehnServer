@@ -570,6 +570,20 @@ class CommonMethods {
     return cursor[0].toList()[0];
   }
 
+  static Future<int> sortBucketContent(int contentId, List<int> mediaIds) async {
+
+    final kv = <String, dynamic>{};
+    kv['media_ids'] = Psql2.listToPgIntArray(mediaIds);
+
+    var cursor = await PublicAccess.psql2.updateKv(DbNames.T_BucketContent, kv, ' id = $contentId');
+
+    if (cursor == null || cursor < 1) {
+      return -1;
+    }
+
+    return cursor;
+  }
+
   static Future<bool> setContentIdToSubBucket(int subId, int contentId) async {
     final kv = <String, dynamic>{};
     kv['content_id'] = contentId;
@@ -634,6 +648,53 @@ class CommonMethods {
     }
 
     return res;
+  }
+
+  static Future<bool> insertAdvertising(Map jsData, int? mediaId) async {
+    final tag = jsData['tag'];
+    final clickLink = jsData['image'];
+
+    var kv = <String, dynamic>{};
+    kv['tag'] =tag;
+    kv['click_link'] = clickLink;
+    kv['media_id'] = mediaId;
+
+    //kv = JsonHelper.removeNullsByKey(kv, ['id', 'register_date'])!;
+    var id = -1;
+
+    if(jsData['id'] != null){
+      id = jsData['id'];
+      kv['id'] = jsData['id'];
+    }
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_SimpleAdvertising, kv, where: ' id = $id');
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static Future<List<Map>?> getAdvertising(int userId, Map jsData) async {
+    final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getAdvertising(sf);
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      final res = e.toMap() as Map<String, dynamic>;
+      res['date'] = res['register_date'];
+      res['url'] = res['click_link'];
+
+      JsonHelper.removeKeys(res, ['register_date', 'click_link']);
+      return res;
+    }).toList();
   }
 
 

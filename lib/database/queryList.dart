@@ -262,6 +262,22 @@ class QueryList {
     return q;
   }
 
+  static String getAdvertising(SearchFilterTool sf){
+    var q = '''SELECT * FROM #tb WHERE (#w) 
+        order by register_date DESC
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_SimpleAdvertising);
+
+    var w = 'true';
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
+
+
+
+
 
 
 

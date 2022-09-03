@@ -49,6 +49,7 @@ class DbNames {
   static const T_ForwardMessage = 'forward_message';
   static const T_AppVersions = 'app_versions';
   static const T_Advertising = 'advertising';
+  static const T_SimpleAdvertising = 'simple_advertising';
   //---------------------------------
   static const T_HtmlHolder = 'html_holder';
   static const T_TextHolder = 'text_holder';

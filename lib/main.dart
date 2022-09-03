@@ -62,7 +62,7 @@ void main(List<String> arguments) async {
   await PublicAccess.psql2.open(dbName: Constants.dbName, user: Constants.dbUserName, pass: Constants.dbPassword);
 
   await DatabaseNs.initial();
-
+print(PublicAccess.isReleaseMode());
   final countryJs = JsonHelper.jsonToMap<String, dynamic>(await PublicAccess.loadAssets('countries.json'))!;
   CountryModel.countries = countryJs;
   CurrencyModel.countries = countryJs;

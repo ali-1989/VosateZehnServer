@@ -358,7 +358,8 @@ class DatabaseNs {
     await DB.execution(UserConnectionModelDb.QAlt_Uk1_UserConnections$p1);//alt
 
     await DB.execution(QTbl_CandidateToDelete);
-    await DB.execution(QTbl_Advertising);
+    //await DB.execution(QTbl_Advertising);
+    await DB.execution(QTbl_SimpleAdvertising);
 
     //await DB.execution(RequestModelDb.view_requestSupportDate);
 
@@ -1146,7 +1147,7 @@ class DatabaseNs {
 
 
   static final String QTbl_Advertising = '''
-  CREATE TABLE IF NOT EXISTS ${DbNames.T_Advertising} (
+  CREATE TABLE IF NOT EXISTS #tb (
        id SERIAL,
        title varchar(200) DEFAULT NULL,
        tag varchar(50) DEFAULT NULL,
@@ -1159,10 +1160,25 @@ class DatabaseNs {
        finish_show_date TIMESTAMP DEFAULT null,
        click_link varchar(400) DEFAULT NULL,
        path varchar(400) NOT NULL,
-       CONSTRAINT pk_Advertising PRIMARY KEY (id),
-       CONSTRAINT uk1_Advertising UNIQUE (path)
-      );''';
+       CONSTRAINT pk_#tb PRIMARY KEY (id),
+       CONSTRAINT uk1_#tb UNIQUE (path)
+      );
+      '''.replaceAll('#tb', DbNames.T_Advertising);
 
+
+  static final String QTbl_SimpleAdvertising = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id SERIAL,
+       media_id int,
+       title varchar(200) DEFAULT NULL,
+       tag varchar(50) DEFAULT NULL,
+       type varchar(30) DEFAULT NULL,
+       can_show BOOLEAN DEFAULT TRUE,
+       register_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       click_link varchar(400) DEFAULT NULL,
+       CONSTRAINT pk_#tb PRIMARY KEY (id)
+      );
+      '''.replaceAll('#tb', DbNames.T_SimpleAdvertising);
 
 
   static final String QTable_AppVersions = '''

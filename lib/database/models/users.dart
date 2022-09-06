@@ -1,12 +1,9 @@
 import 'package:assistance_kit/api/helpers/boolHelper.dart';
 import 'package:vosate_zehn_server/database/models/dbModel.dart';
 import 'package:vosate_zehn_server/database/dbNames.dart';
-import 'package:vosate_zehn_server/database/queryList.dart';
-import 'package:vosate_zehn_server/database/querySelector.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/models/userTypeModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
-import 'package:vosate_zehn_server/rest_api/queryFiltering.dart';
 
 
 class UserModelDb extends DbModel {
@@ -211,37 +208,5 @@ class UserModelDb extends DbModel {
     }
 
     return false;
-  }
-  
-  static Future<List<Map>> searchOnPupilTrainer(Map<String, dynamic> js) async{
-    final fq = FilterRequest.fromMap(js[Keys.filtering]);
-    final qSelector = QuerySelector();
-    final replace = <String, dynamic>{};
-    replace['LIMIT x'] = 'LIMIT ${fq.limit}';
-
-    qSelector.addQuery(QueryList.users_q1(fq));
-
-    final userIds = await PublicAccess.psql2.queryCall(qSelector.generate(0, replace));
-
-    if(userIds == null || userIds.isEmpty) {
-      return <Map>[];
-    }
-
-    final ides = <int>[];
-
-    for(final itm in userIds){
-      final id = itm.toList()[0];
-
-      ides.add(id);
-      //res.add(await CommonMethods.getUserAdvanced(id));
-    }
-
-    final advMaps = await PublicAccess.psql2.queryCall(QueryList.advancedUsers_q1(ides));
-
-    if(advMaps == null || userIds.isEmpty) {
-      return <Map>[];
-    }
-
-    return advMaps.map((e) => e.toMap() as Map<String, dynamic>).toList();
   }
 }

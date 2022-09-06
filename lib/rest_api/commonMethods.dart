@@ -697,6 +697,42 @@ class CommonMethods {
     }).toList();
   }
 
+  static Future<List<Map>?> getDailyText(String start, String end) async {
+    //final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
+
+    var q = QueryList.getDailyText(start, end);
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      final res = e.toMap() as Map<String, dynamic>;
+      return res;
+    }).toList();
+  }
+
+  static Future<bool> insertDailyText(int? id, String txt, String date) async {
+    var kv = <String, dynamic>{};
+    kv['text'] =txt;
+    kv['date'] = date;
+
+
+    if(id != null){
+      kv['id'] = id;
+    }
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_SimpleAdvertising, kv, where: ' id = ${id?? -1}');
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
 
 
 
@@ -726,7 +762,7 @@ class CommonMethods {
     replace['LIMIT x'] = 'LIMIT ${fq.limit}';
     replace['OFFSET x'] = 'OFFSET ${fq.offset}';
 
-    qSelector.addQuery(QueryList.simpleUsers_q1(fq));
+    qSelector.addQuery(''/*QueryList.simpleUsers_q1(fq)*/);
 
     final cursor = await PublicAccess.psql2.queryCall(qSelector.generate(0, replace));
 
@@ -739,145 +775,7 @@ class CommonMethods {
     }).toList();
   }
 
-  static Future<List<Map<String, dynamic>>> getAdvertisingListForUser() async {
-    final q = QueryList.getAdvertisingListForUser();
-    final cursor = await PublicAccess.psql2.queryCall(q);
 
-    if (cursor == null || cursor.isEmpty) {
-      return <Map<String, dynamic>>[];
-    }
-
-    return cursor.map((e) {
-      return (e.toMap() as Map<String, dynamic>);
-    }).toList();
-  }
-
-  static Future<List<Map<String, dynamic>>> getAdvertisingList(Map<String, dynamic> jsOption) async {
-    final fq = FilterRequest.fromMap(jsOption[Keys.filtering]);
-    final qSelector = QuerySelector();
-
-    final replace = <String, dynamic>{};
-
-    qSelector.addQuery(QueryList.getAdvertisingList(fq));
-
-    replace['LIMIT x'] = 'LIMIT ${fq.limit}';
-
-    final cursor = await PublicAccess.psql2.queryCall(qSelector.generate(0, replace));
-
-    if (cursor == null || cursor.isEmpty) {
-      return <Map<String, dynamic>>[];
-    }
-
-    return cursor.map((e) {
-      return e.toMap() as Map<String, dynamic>;
-    }).toList();
-  }
-
-  static Future<bool> addNewAdvertising(int userId, Map<String , dynamic> js, String rawPath) async{
-    final p = PathsNs.removeBasePathFromLocalPath(PathsNs.getCurrentPath(), rawPath);
-
-    final kv = <String, dynamic>{};
-    kv['creator_id'] = userId;
-    kv[Keys.title] = js[Keys.title];
-    kv[Keys.type] = js[Keys.type];
-    kv['tag'] = js['tag'];
-    kv['click_link'] = js['link'];
-    kv['order_num'] = js['order_num'];
-    kv['can_show'] = js['can_show'];
-    kv['start_show_date'] = js['start_date'];
-    kv['finish_show_date'] = js['finish_date'];
-    kv['path'] = UrlHelper.encodeUrl(p!);
-
-    final effected = await PublicAccess.psql2.insertKv(DbNames.T_Advertising, kv);
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> deleteAdvertising(int userId, int id) async{
-    final effected = await PublicAccess.psql2.delete(DbNames.T_Advertising, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> changeAdvertisingShowState(int userId, int id, bool state) async{
-    final kv = <String, dynamic>{};
-    kv['can_show'] = state;
-
-    final effected = await PublicAccess.psql2.updateKv(DbNames.T_Advertising, kv, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> changeAdvertisingTitle(int userId, int id, String title) async{
-    final kv = <String, dynamic>{};
-    kv['title'] = title;
-
-    final effected = await PublicAccess.psql2.updateKv(DbNames.T_Advertising, kv, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> changeAdvertisingTag(int userId, int id, String tag) async{
-    final kv = <String, dynamic>{};
-    kv['Tag'] = tag;
-
-    final effected = await PublicAccess.psql2.updateKv(DbNames.T_Advertising, kv, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> changeAdvertisingType(int userId, int id, String type) async{
-    final kv = <String, dynamic>{};
-    kv['type'] = type;
-
-    final effected = await PublicAccess.psql2.updateKv(DbNames.T_Advertising, kv, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> changeAdvertisingPhoto(int userId, int id, String rawPath) async{
-    final p = PathsNs.removeBasePathFromLocalPath(PathsNs.getCurrentPath(), rawPath);
-
-    final kv = <String, dynamic>{};
-    kv['path'] = UrlHelper.encodeUrl(p!);
-
-    final effected = await PublicAccess.psql2.updateKv(DbNames.T_Advertising, kv, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> changeAdvertisingOrder(int userId, int id, int order) async{
-    final kv = <String, dynamic>{};
-    kv['order_num'] = order;
-
-    final effected = await PublicAccess.psql2.updateKv(DbNames.T_Advertising, kv, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> changeAdvertisingDate(int userId, int id, String section, String? dateTs) async{
-    final kv = <String, dynamic>{};
-
-    if(section == 'start_date') {
-      kv['start_show_date'] = dateTs;
-    }
-    else {
-      kv['finish_show_date'] = dateTs;
-    }
-
-    final effected = await PublicAccess.psql2.updateKv(DbNames.T_Advertising, kv, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
-
-  static Future<bool> changeAdvertisingLink(int userId, int id, String link) async{
-    final kv = <String, dynamic>{};
-    kv['click_link'] = link;
-
-    final effected = await PublicAccess.psql2.updateKv(DbNames.T_Advertising, kv, 'id = $id');
-
-    return effected != null && effected > 0;
-  }
 
   static Future<Map> getCoursePayInfo(int userId, int courseId) async {
     var q = '''
@@ -945,47 +843,11 @@ class CommonMethods {
     return null;
   }
 
-  static Future deleteTicketMessage(int userId, int ticketId, String msgId, bool isManager) async {
-    final where;
-
-    if(isManager) {
-      where = ' id = $msgId ';
-    }
-    else {
-      where = ' id = $msgId AND sender_user_id = $userId ';
-    }
-
-    final cursor = await PublicAccess.psql2.deleteReturning(DbNames.T_TicketMessage, where, returning: 'media_id');
-
-    if(cursor is String || cursor is int){
-      return null;//deleteMediaMessage(userId, cursor);
-    }
-
-    return null;
-  }
-
   static Future deleteMediaMessage(int userId, String mediaId) async {
     final cursor = await PublicAccess.psql2.delete(DbNames.T_MediaMessageData, ' id = $mediaId ');
 
     if(cursor is String || cursor is int){
       return cursor;
-    }
-
-    return null;
-  }
-
-  static Future<int?> getStarterUserIdFromTicket(int ticketId) async {
-    var q = '''SELECT starter_user_id FROM #tb WHERE id = $ticketId;''';
-    q = q.replaceFirst(RegExp('#tb'), DbNames.T_Ticket);
-
-    final cursor = await PublicAccess.psql2.getColumn(q, 'starter_user_id');
-
-    if(cursor is num){
-      return cursor.toInt();
-    }
-
-    if(cursor is String){
-      return int.parse(cursor);
     }
 
     return null;

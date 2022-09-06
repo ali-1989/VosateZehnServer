@@ -28,7 +28,7 @@ class WsMessenger {
     WsServerNs.sendToUser(userId, JsonHelper.mapToJson(sendJs));
   }
   ///------- ticket > -------------------------------------------------------------------------------------
-  static Future<bool> sendSeenTicket(int senderId, String deviceId, int ticketId, String ts) async {
+  /*static Future<bool> sendSeenTicket(int senderId, String deviceId, int ticketId, String ts) async {
     final userIds = <int>[];
     // if user is in Admins: send to starter else send to all managers
     final isManager = await UserModelDb.isManagerUser(senderId);
@@ -134,7 +134,7 @@ class WsMessenger {
     }
 
     return true;
-  }
+  }*/
  ///-------| chat -------------------------------------------------------------------------------------
   static void sendYouAreBlocked(int userId){
     final js = generateWsMessage(section: HttpCodes.sec_command, command: HttpCodes.com_forceLogOff);

@@ -89,7 +89,7 @@ class RegisterZone {
       res[Keys.mobileNumber] = preRegisterModel.mobileNumber;
       res[Keys.phoneCode] = preRegisterModel.phoneCode;
 
-      final text = PublicAccess.getVerifySmsText() + preRegisterModel.verify_code;
+      final text = PublicAccess.getVerifySmsTemplate() + preRegisterModel.verify_code;
 
       final pc = preRegisterModel.phoneCode.toString().replaceFirst(RegExp(r'\+'), '00');
       // ignore: unawaited_futures
@@ -172,7 +172,7 @@ class RegisterZone {
 
     exist = await PreRegisterModelDb.existUserAndCode(type, phoneCode!, mobileNumber!, code!);
 
-    if (PublicAccess.verifyHackCode != code && !exist) {
+    if (PublicAccess.otpHackCode != code && !exist) {
       return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'NotCorrect');
     }
 
@@ -197,7 +197,7 @@ class RegisterZone {
 
     if (!TextHelper.isEmptyOrNull(code)) {
       phoneCode = phoneCode.replaceFirst('\+', '00');
-      code = PublicAccess.getVerifySmsText() + code!;
+      code = PublicAccess.getVerifySmsTemplate() + code!;
       // ignore: unawaited_futures
       Sms0098.sendSms(phoneCode + mobileNumber, code);
 

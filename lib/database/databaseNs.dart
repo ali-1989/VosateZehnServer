@@ -9,8 +9,6 @@ import 'package:vosate_zehn_server/database/models/emailModel.dart';
 import 'package:vosate_zehn_server/database/models/language.dart';
 import 'package:vosate_zehn_server/database/models/mobileNumber.dart';
 import 'package:vosate_zehn_server/database/models/register.dart';
-import 'package:vosate_zehn_server/database/models/ticket.dart';
-import 'package:vosate_zehn_server/database/models/ticketMessage.dart';
 import 'package:vosate_zehn_server/database/models/userCurrency.dart';
 import 'package:vosate_zehn_server/database/models/userMedia.dart';
 import 'package:vosate_zehn_server/database/models/userNotifier.dart';
@@ -127,17 +125,17 @@ class DatabaseNs {
 
     await createSequence(DbNames.Seq_User, 100, Constants.MAX_long, 100);
     await createSequence(DbNames.Seq_SystemMessage, 99, Constants.MAX_long, 99);
-    await createSequence(DbNames.Seq_ticket, 99, Constants.MAX_long, 99);
+    //await createSequence(DbNames.Seq_ticket, 99, Constants.MAX_long, 99);
     await createSequence(DbNames.Seq_MediaGroupId, 99, Constants.MAX_long, 99);
 
     await createNumericSequence(DbNames.T_NumericSequence, DbNames.Seq_NewUser, '1', '1');
-    await createNumericSequence(DbNames.T_NumericSequence, DbNames.Seq_ticketMessageId, '100', '100');
+    //await createNumericSequence(DbNames.T_NumericSequence, DbNames.Seq_ticketMessageId, '100', '100');
     await createNumericSequence(DbNames.T_NumericSequence, DbNames.Seq_MediaId, '100', '100');
   }
 
   static Future initialSequence() async {
     await setSequenceVal(DbNames.Seq_User, await getLastSequenceVal(DbNames.T_Users, 'user_id'.L, 100));
-    await setSequenceVal(DbNames.Seq_ticket, await getLastSequenceVal(DbNames.T_Ticket, 'id', 99));
+    //await setSequenceVal(DbNames.Seq_ticket, await getLastSequenceVal(DbNames.T_Ticket, 'id', 99));
     await setSequenceVal(DbNames.Seq_MediaGroupId, await getLastSequenceVal(DbNames.T_MediaMessageData, 'group_id', 99));
     var s1 = await getLastSequenceVal(DbNames.T_SystemMessageVsCommon, 'id', 99);
     var s2 = await getLastSequenceVal(DbNames.T_SystemMessageVsUser, 'id', 99);
@@ -149,7 +147,7 @@ class DatabaseNs {
 
     await setNumericSequenceVal(DbNames.T_NumericSequence, DbNames.Seq_NewUser, await getLastSequenceNumeric(DbNames.T_PreRegisteringUser, 'id','0'));
     await setNumericSequenceVal(DbNames.T_NumericSequence, DbNames.Seq_MediaId, await getLastSequenceNumeric(DbNames.T_MediaMessageData, 'id', '100'));
-    await setNumericSequenceVal(DbNames.T_NumericSequence, DbNames.Seq_ticketMessageId, await getLastSequenceNumeric(DbNames.T_TicketMessage, 'id', '100'));
+    //await setNumericSequenceVal(DbNames.T_NumericSequence, DbNames.Seq_ticketMessageId, await getLastSequenceNumeric(DbNames.T_TicketMessage, 'id', '100'));
   }
 
 
@@ -165,7 +163,7 @@ class DatabaseNs {
     ''';
   }
 
-  static Future prepareTables() async{
+  static Future prepareTables() async {
     await DB.execution(QTbl_TypeForSex);
     await DB.execution(UserModelDb.QTbl_User);
     await DB.execution(UserModelDb.QTbl_User$p1);//part
@@ -287,7 +285,7 @@ class DatabaseNs {
 
     await DB.execution(QTbl_TypeForMessage);
 
-    await DB.execution(TicketModelDb.QTbl_Ticket);
+    /*await DB.execution(TicketModelDb.QTbl_Ticket);
     await DB.execution(TicketModelDb.QTbl_Ticket$p1);//part
     await DB.execution(TicketModelDb.QTbl_Ticket$p2);//part
     await DB.execution(TicketModelDb.QIdx_Ticket$type);//idx
@@ -302,9 +300,9 @@ class DatabaseNs {
     await DB.execution(TicketMessageModelDb.QIdx_TicketMessage$send_ts);//idx
     await DB.execution(TicketMessageModelDb.QAltUk1_TicketMessage$p1);//alt
     await DB.execution(TicketModelDb.view_ticketsForManager1);//view
-    await DB.execution(TicketModelDb.view_ticketsForManager2);//view
+    await DB.execution(TicketModelDb.view_ticketsForManager2);//view*/
 
-    await DB.execution(QTbl_seenTicketMessage);
+    /*await DB.execution(QTbl_seenTicketMessage);
     await DB.execution(QTbl_seenTicketMessage$p1);
     await DB.execution(QTbl_seenTicketMessage$p2);
     await DB.execution(QAlt_Uk1_seenTicketMessage$p1);
@@ -313,20 +311,20 @@ class DatabaseNs {
 
     await DB.execution(QTbl_TicketReplyMessage);
     await DB.execution(QTbl_TicketReplyMessage$p1); //part
-    await DB.execution(QIdx_TicketReplyMessage$mentionUserId); //idx
+    await DB.execution(QIdx_TicketReplyMessage$mentionUserId); //idx*/
 
     await DB.execution(QTbl_MediaMessageData);
     await DB.execution(QTbl_MediaMessageData$p1);//part
     await DB.execution(QTbl_MediaMessageData$p2);//part
     await DB.execution(QIdx_MediaMessageData$message_type);//idx
 
-    await DB.execution(QTbl_ReplyMessage);
+    /*await DB.execution(QTbl_ReplyMessage);
     await DB.execution(QTbl_ReplyMessage$p1);//part
     await DB.execution(QIdx_ReplyMessage$mentionUserId);//idx
 
     await DB.execution(QTbl_ForwardMessage);
     await DB.execution(QTbl_ForwardMessage$p1);//part
-    await DB.execution(QIdx_ForwardMessage$mentionUserId);//idx
+    await DB.execution(QIdx_ForwardMessage$mentionUserId);*///idx
 
     await DB.execution(DeviceCellarModelDb.QTbl_DevicesCellar);
     await DB.execution(DeviceCellarModelDb.QTbl_DevicesCellar$p1);//part
@@ -375,6 +373,7 @@ class DatabaseNs {
     await DB.execution(QTbl_Bucket);
     await DB.execution(QTbl_SubBucket);
     await DB.execution(QTbl_SubBucketContent);
+    await DB.execution(QTbl_dailyText);
   }
 
   static Future prepareFunctions() async{
@@ -709,16 +708,16 @@ class DatabaseNs {
       .replaceFirst('Seq_SystemMessage', DbNames.Seq_SystemMessage);
 
   static final String QIdx_SystemMessageVsUser$user_id = '''
-      CREATE INDEX IF NOT EXISTS ${DbNames.T_SystemMessageVsUser}_user_id_idx
-      ON ${DbNames.T_SystemMessageVsUser}
+      CREATE INDEX IF NOT EXISTS #tb_user_id_idx
+      ON #tb
       USING BTREE (user_id);
-      ''';
+      '''.replaceAll('#tb', DbNames.T_SystemMessageVsUser);
 
   static final String QIdx_SystemMessageVsUser$start_time = '''
-    CREATE INDEX IF NOT EXISTS ${DbNames.T_SystemMessageVsUser}_Start_time_idx
-    ON ${DbNames.T_SystemMessageVsUser}
+    CREATE INDEX IF NOT EXISTS #tb_Start_time_idx
+    ON #tb
     USING BTREE (start_time DESC);
-      ''';
+      '''.replaceAll('#tb', DbNames.T_SystemMessageVsUser);
 
   static final String QIdx_SystemMessageVsUser$expire_time = '''
     CREATE INDEX IF NOT EXISTS ${DbNames.T_SystemMessageVsUser}_Expire_time_idx
@@ -728,37 +727,38 @@ class DatabaseNs {
 
 
   static final String QTbl_SystemMessageResult = '''
- 	CREATE TABLE IF NOT EXISTS ${DbNames.T_SystemMessageResult} (
+ 	CREATE TABLE IF NOT EXISTS #tb (
     message_id BIGINT NOT NULL,
     user_id BIGINT DEFAULT NULL,
     result varchar(20) NOT NULL,
     register_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
-    CONSTRAINT uk1_SystemMessageResult UNIQUE (message_id, user_id));
- 	''';
+    CONSTRAINT uk1_#tb UNIQUE (message_id, user_id));
+ 	'''.replaceAll('#tb', DbNames.T_SystemMessageResult);
 
   static final String QIdx_SystemMessageResult$user_id = '''
-    CREATE INDEX IF NOT EXISTS SystemMessageResult_user_id_idx
-    ON ${DbNames.T_SystemMessageResult}
+    CREATE INDEX IF NOT EXISTS #tb_user_id_idx
+    ON #tb
     USING BTREE (user_id);
-      ''';
+      '''.replaceAll('#tb', DbNames.T_SystemMessageResult);
 
 
   static final String QTbl_TypeForUserMetaData = '''
- 	CREATE TABLE IF NOT EXISTS ${DbNames.T_TypeForUserMetaData} (
+ 	CREATE TABLE IF NOT EXISTS #tb (
  	key SMALLSERIAL,
  	caption varchar(40) NOT NULL,
- 	CONSTRAINT pk_TypeForUserMetaData PRIMARY KEY (key),
- 	CONSTRAINT uk1_TypeForUserMetaData UNIQUE (caption));
- 	''';
+ 	CONSTRAINT pk_#tb PRIMARY KEY (key),
+ 	CONSTRAINT uk1_#tb UNIQUE (caption));
+ 	'''.replaceAll('#tb', DbNames.T_TypeForUserMetaData);
 
 
   static final String QTbl_MediaType = '''
-  CREATE TABLE IF NOT EXISTS ${DbNames.T_MediaType} (
+  CREATE TABLE IF NOT EXISTS #tb (
        key SMALLSERIAL,
        caption VARCHAR(40) NOT NULL,
-       CONSTRAINT pk_${DbNames.T_MediaType} PRIMARY KEY (key),
-       CONSTRAINT uk1_${DbNames.T_MediaType} UNIQUE (caption)
-      );''';
+       CONSTRAINT pk_#tb PRIMARY KEY (key),
+       CONSTRAINT uk1_#tb UNIQUE (caption)
+      );
+      '''.replaceAll('#tb', DbNames.T_MediaType);
 
 
   //if users count grow in future, create more partition
@@ -924,6 +924,15 @@ class DatabaseNs {
       );
       '''.replaceAll('#tb', DbNames.T_BucketContent);
 
+  static final String QTbl_dailyText = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id BIGSERIAL,
+       text varchar(150) DEFAULT NULL,
+       date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       CONSTRAINT pk_#tb PRIMARY KEY (id)
+      );
+      '''.replaceAll('#tb', DbNames.T_dailyText);
+
 
   //.....................................................................................................
 
@@ -980,7 +989,7 @@ class DatabaseNs {
   //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   // last_message_ts <-> seen_ts
-  static final String QTbl_seenTicketMessage = '''
+  /*static final String QTbl_seenTicketMessage = '''
   CREATE TABLE IF NOT EXISTS ${DbNames.T_TicketMessageSeen}(
       user_id BIGINT NOT NULL,
       ticket_id BIGINT NOT NULL,
@@ -988,9 +997,9 @@ class DatabaseNs {
       CONSTRAINT fk1_seenTicketMessage FOREIGN KEY (user_id) REFERENCES ${DbNames.T_Users} (user_id)
       	ON DELETE CASCADE ON UPDATE CASCADE
       )
-      PARTITION BY RANGE (user_id);''';
+      PARTITION BY RANGE (user_id);''';*/
 
-  static final String QTbl_seenTicketMessage$p1 = '''
+  /*static final String QTbl_seenTicketMessage$p1 = '''
   CREATE TABLE IF NOT EXISTS ${DbNames.T_TicketMessageSeen}_p1
   PARTITION OF ${DbNames.T_TicketMessageSeen}
   FOR VALUES FROM (0) TO (500000);''';//500_000
@@ -1041,7 +1050,7 @@ class DatabaseNs {
 
   static final String QIdx_TicketReplyMessage$mentionUserId = '''
   CREATE INDEX IF NOT EXISTS TicketReplyMessage_mention_user_id_idx
-  ON ${DbNames.T_TicketReplyMessage} USING BTREE (mention_user_id);''';
+  ON ${DbNames.T_TicketReplyMessage} USING BTREE (mention_user_id);''';*/
 
   /*static final String QAlt_Uk1_TicketReplyMessage$p1 = '''
   DO \$\$ BEGIN ALTER TABLE ${DbNames.T_TicketReplyMessage}_p1
@@ -1094,7 +1103,7 @@ class DatabaseNs {
 
   //old: message_id Numeric(40,0), reference
   //replier_id: senderId
-  static final String QTbl_ReplyMessage = '''
+  /*static final String QTbl_ReplyMessage = '''
   CREATE TABLE IF NOT EXISTS ${DbNames.T_ReplyMessage}( 
        id BIGSERIAL,  
        mention_message_id Numeric(40,0) NOT NULL,
@@ -1112,11 +1121,11 @@ class DatabaseNs {
   PARTITION OF ${DbNames.T_ReplyMessage}
   FOR VALUES FROM (0) TO (1000000);''';//1_000_000
 
-  /*static final String QAlt_Uk1_ReplyMessage$p1 = '''
+  *//*static final String QAlt_Uk1_ReplyMessage$p1 = '''
   DO \$\$ BEGIN ALTER TABLE ${DbNames.T_ReplyMessage}_p1
        ADD CONSTRAINT uk1_ReplyMessage UNIQUE (message_id, mention_message_id);
        EXCEPTION WHEN others THEN IF SQLSTATE = '42P07' THEN null;
-       ELSE RAISE EXCEPTION '> %', SQLERRM; END IF; END \$\$;''';*/
+       ELSE RAISE EXCEPTION '> %', SQLERRM; END IF; END \$\$;''';*//*
 
   static final String QIdx_ReplyMessage$mentionUserId = '''
   CREATE INDEX IF NOT EXISTS ReplyMessage_mention_user_id_idx
@@ -1142,11 +1151,11 @@ class DatabaseNs {
 
   static final String QIdx_ForwardMessage$mentionUserId = '''
   CREATE INDEX IF NOT EXISTS ForwardMessage_mention_conversation_id_idx
-  ON ${DbNames.T_ForwardMessage} USING BTREE (mention_conversation_id);''';
+  ON ${DbNames.T_ForwardMessage} USING BTREE (mention_conversation_id);''';*/
 
 
 
-  static final String QTbl_Advertising = '''
+  /*static final String QTbl_Advertising = '''
   CREATE TABLE IF NOT EXISTS #tb (
        id SERIAL,
        title varchar(200) DEFAULT NULL,
@@ -1163,7 +1172,7 @@ class DatabaseNs {
        CONSTRAINT pk_#tb PRIMARY KEY (id),
        CONSTRAINT uk1_#tb UNIQUE (path)
       );
-      '''.replaceAll('#tb', DbNames.T_Advertising);
+      '''.replaceAll('#tb', DbNames.T_Advertising);*/
 
 
   static final String QTbl_SimpleAdvertising = '''

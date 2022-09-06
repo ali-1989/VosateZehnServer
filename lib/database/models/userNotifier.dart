@@ -148,7 +148,7 @@ class UserNotifierModel extends DbModel {
     final replace = <String, dynamic>{};
     var qIndex = 0;
 
-    qSelector.addQuery(QueryList.userNotifiers_q1(filtering, userId));
+    qSelector.addQuery(''/*QueryList.userNotifiers_q1(filtering, userId)*/);
 
     replace['LIMIT x'] = 'LIMIT ${filtering.limit}';
 

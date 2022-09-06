@@ -58,7 +58,7 @@ class AppHttpDio {
 								//return handler.resolve(response);
 								//return handler.reject(dioError);
 							},
-							onResponse: (Response<dynamic> res, ResponseInterceptorHandler handler) {
+							 onResponse: (Response<dynamic> res, ResponseInterceptorHandler handler) {
 								itemRes._response = res;
 								itemRes.isOk = !(res is Error
 										|| res is Exception
@@ -71,8 +71,10 @@ class AppHttpDio {
 							},
 							onError: (DioError err, ErrorInterceptorHandler handler) async{
 								final ro = RequestOptions(path: uri);
-								final res = Response<DioError>(requestOptions: ro,
-										data: DioError(requestOptions: ro, error: err.error, type: DioErrorType.response));
+								final res = Response<DioError>(
+										requestOptions: ro,
+										data: DioError(requestOptions: ro, error: err.error, type: DioErrorType.response)
+								);
 
 								itemRes._response = res;
 								err.response = res;
@@ -87,7 +89,7 @@ class AppHttpDio {
 			itemRes.dio = dio;
 			itemRes.canceller = cancelToken;
 
-			itemRes._responseFuture = dio.request<dynamic>(
+			itemRes._responseAsync = dio.request<dynamic>(
 				uri,
 				cancelToken: cancelToken,
 				options: item.options,
@@ -95,18 +97,10 @@ class AppHttpDio {
 				data: item.body,
 				onReceiveProgress: item.onReceiveProgress,
 				onSendProgress: item.onSendProgress,
-			)
-					.timeout(Duration(milliseconds: dio.options.connectTimeout + 2000), onTimeout: () async{
-				final ro = RequestOptions(path: uri);
-				final res = Response<DioError>(requestOptions: ro, data: DioError(requestOptions: ro));
-				itemRes._response = res;
-				return res;
-				//bad: throw DioError(requestOptions: RequestOptions(path: uri));
-				//return Future.error(DioError(requestOptions: RequestOptions(path: uri)));
-			});
+			);
 		}
 		catch (e) {
-			itemRes._responseFuture = Future.error(e);
+			itemRes._responseAsync = Future.error(e);
 		}
 
 		return itemRes;
@@ -165,16 +159,16 @@ class AppHttpDio {
 								//handler.next(err);   < this take log error
 								//handler.reject(err); < this take log error
 								handler.resolve(res);
-							})
+						})
 			);
 
 			final cancelToken = CancelToken();
 			itemRes.dio = dio;
 			itemRes.canceller = cancelToken;
 
-			itemRes._responseFuture = dio.download(
-				uri,
-				savePath,
+			itemRes._responseAsync = dio.download(
+					uri,
+					savePath,
 				cancelToken: cancelToken,
 				options: item.options,
 				queryParameters: item.queries,
@@ -183,7 +177,7 @@ class AppHttpDio {
 			);
 		}
 		catch (e) {
-			itemRes._responseFuture = Future.error(e);
+			itemRes._responseAsync = Future.error(e);
 		}
 
 		return itemRes;
@@ -209,11 +203,11 @@ class AppHttpDio {
 			send = send
 					.timeout(timeout?? const Duration(seconds: 26),)
 					.catchError((e){ // TimeoutException
-				return null;
-				//client.close();
-			});
+						return null;
+						//client.close();
+					});
 
-			itemRes._responseFuture = send.then((http.StreamedResponse? response) {
+			itemRes._responseAsync = send.then((http.StreamedResponse? response) {
 				if(response == null || response is Error) {
 					return null;//Response<http.StreamedResponse>(data: null, requestOptions: RequestOptions(path: uri));
 				}
@@ -249,7 +243,7 @@ class AppHttpDio {
 			});
 		}
 		catch (e) {
-			itemRes._responseFuture = Future.error(e);
+			itemRes._responseAsync = Future.error(e);
 		}
 
 		return itemRes;
@@ -258,7 +252,7 @@ class AppHttpDio {
 	static void cancelAndClose(HttpRequester? request, {String passTag = 'my'}) {
 		if(request != null){
 			if(!(request.canceller?.isCancelled?? true)) {
-				request.canceller?.cancel(passTag);
+			  request.canceller?.cancel(passTag);
 			}
 
 			request.dio?.close();
@@ -267,7 +261,7 @@ class AppHttpDio {
 
 	static String? correctUri(String? uri) {
 		if(uri == null) {
-			return null;
+		  return null;
 		}
 
 		//return uri.replaceAll(RegExp('/{2,}'), "/").replaceFirst(':\/', ':\/\/');
@@ -276,7 +270,7 @@ class AppHttpDio {
 }
 ///========================================================================================================
 class HttpRequester {
-	late Future<Response?> _responseFuture;
+	late Future<Response?> _responseAsync;
 	Response? _response;
 	RequestOptions? requestOptions;
 	CancelToken? canceller;
@@ -285,17 +279,17 @@ class HttpRequester {
 	Map<String, dynamic>? parts;
 
 	HttpRequester(){
-		_responseFuture = Future((){return null;});
+		_responseAsync = Future((){return null;});
 	}
 
 	// maybe: Future<dynamic> vs Future<Response?>
-	Future<Response?> get response => _responseFuture;
+	Future<Response?> get response => _responseAsync;
 
 	Response? get responseData => _response;
 
 	dynamic getBody(){
 		if(_response == null) {
-			return null;
+		  return null;
 		}
 
 		return _response?.data;
@@ -303,7 +297,7 @@ class HttpRequester {
 
 	Map<String, dynamic>? getBodyAsJson(){
 		if(_response == null) {
-			return null;
+		  return null;
 		}
 
 		final receive = _response?.data.toString();
@@ -314,13 +308,13 @@ class HttpRequester {
 		final parts = getParts();
 
 		if(parts == null) {
-			return getBodyAsJson();
+		  return getBodyAsJson();
 		}
 
 		final List<int>? receive = parts['Json'];
 
 		if(receive == null) {
-			return null;
+		  return null;
 		}
 
 		return JsonHelper.jsonToMap(Converter.bytesToStringUtf8(receive));
@@ -330,7 +324,7 @@ class HttpRequester {
 		final parts = getParts();
 
 		if(parts == null) {
-			return null;
+		  return null;
 		}
 
 		return parts[name];
@@ -338,7 +332,7 @@ class HttpRequester {
 
 	Map<String, dynamic>? getParts(){
 		if(parts != null) {
-			return parts;
+		  return parts;
 		}
 
 		final List<int> bytes = _response?.data;
@@ -396,7 +390,7 @@ class HttpRequester {
 				}
 			}
 			else {
-				break;
+			  break;
 			}
 		}
 
@@ -416,8 +410,8 @@ class HttpRequester {
 	}
 
 	Response emptyResponse = Response<ResponseBody>(
-		requestOptions: RequestOptions(path: ''),
-		data: null,
+			requestOptions: RequestOptions(path: ''),
+			data: null,
 	);//ResponseBody.fromString('non', 404)
 }
 ///===================================================================================================
@@ -462,7 +456,7 @@ class HttpItem {
 
 	void addPathQueryAsMap(Map<String, dynamic> map){
 		for(var kv in map.entries) {
-			queries[kv.key] = kv.value;
+		  queries[kv.key] = kv.value;
 		}
 	}
 
@@ -522,6 +516,20 @@ class HttpItem {
 		formDataItems.add(itm);
 	}
 
+	void addBodyStream(String partName, String dataName, Stream<List<int>> stream, int size){
+		if(body is! FormData) {
+			body = FormData();
+		}
+
+		final itm = FormDataItem();
+		itm.partName = partName;
+		itm.fileName = dataName;
+		itm.stream = stream;
+		itm.streamSize = size;
+
+		formDataItems.add(itm);
+	}
+
 	void prepareMultiParts(){
 		if(body is! FormData) {
 			return;
@@ -539,8 +547,12 @@ class HttpItem {
 				final m = MultipartFile.fromFileSync(fd.filePath!, filename: fd.fileName, contentType: fd.contentType);
 				newBody.files.add(MapEntry(fd.partName, m));
 			}
-			else {
+			else if(fd.bytes != null){
 				final m = MultipartFile.fromBytes(fd.bytes!, filename: fd.fileName, contentType: fd.contentType);
+				newBody.files.add(MapEntry(fd.partName, m));
+			}
+			else {
+				final m = MultipartFile(fd.stream!, fd.streamSize!, filename: fd.fileName, contentType: fd.contentType);
 				newBody.files.add(MapEntry(fd.partName, m));
 			}
 		}
@@ -553,7 +565,9 @@ class FormDataItem {
 	late String partName;
 	late String fileName;
 	String? filePath;
+	int? streamSize;
 	List<int>? bytes;
+	Stream<List<int>>? stream;
 	MediaType contentType = MediaType.parse('application/octet-stream');
 
 	FormDataItem();

@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:alfred/alfred.dart';
 import 'package:assistance_kit/api/converter.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
+import 'package:assistance_kit/dateSection/ADateStructure.dart';
+import 'package:assistance_kit/dateSection/dateHelper.dart';
 import 'package:vosate_zehn_server/database/models/userBlockList.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCountry.dart';
@@ -147,7 +149,7 @@ class GraphHandler {
       return RegisterZone.preRegisterWithFullDataAndSendOtp(wrapper);
     }
 
-    if (request == 'verify_otp') {
+    if (request == 'complete_registering') {
       return RegisterZone.verifyOtpAndCompletePreRegistering(wrapper);
     }
 
@@ -271,6 +273,13 @@ class GraphHandler {
       return getAdvertisingData(wrapper);
     }
 
+    if (request == 'set_daily_text') {
+      return setDailyText(wrapper);
+    }
+
+    if (request == 'get_daily_text_data') {
+      return getDailyTextData(wrapper);
+    }
 
 
     return generateResultError(HttpCodes.error_requestNotDefined);
@@ -957,6 +966,47 @@ class GraphHandler {
     return res;
   }
 
+  static Future<Map<String, dynamic>> setDailyText(GraphHandlerWrap wrapper) async{
+    final text = wrapper.bodyJSON['text'];
+    final date = wrapper.bodyJSON[Keys.date];
+    final id = wrapper.bodyJSON[Keys.id];
+
+    if(text == null || date == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final isOk = await CommonMethods.insertDailyText(id, text, date);
+
+    if(isOk) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set daily text');
+    }
+
+    final res = generateResultOk();
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getDailyTextData(GraphHandlerWrap wrapper) async{
+    var startDate = wrapper.bodyJSON[Keys.date];
+    var endDate = wrapper.bodyJSON['end_date'];
+
+    startDate ??= DateHelper.toTimestamp(GregorianDate().getFirstOfMonth().convertToSystemDate());
+
+    if(endDate == null) {
+      final s = DateHelper.tsToSystemDate(startDate)!;
+      endDate = DateHelper.toTimestamp(GregorianDate.from(s).getEndOfMonth().convertToSystemDate());
+    }
+
+    final list = await CommonMethods.getDailyText(startDate, endDate);
+
+    if(list == null) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not get daily text');
+    }
+
+    final res = generateResultOk();
+    res[Keys.dataList] = list;
+    return res;
+  }
+
 
 
 
@@ -1263,303 +1313,4 @@ class GraphHandler {
 
     return res;
   }
-
-  /*static Future<Map<String, dynamic>> deleteBodyPhoto(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final deviceId = js[Keys.deviceId];
-    String? nodeName = js[Keys.nodeName];
-    String? date = js[Keys.date];
-    final uri = js[Keys.imageUri];
-
-    if(userId == null || deviceId == null || nodeName == null || date == null || uri == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final okDb = await UserFitnessDataModelDb.deleteUserFitnessImage(userId, nodeName, date, uri);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete User FitnessStatus image');
-    }
-
-    final res = generateResultOk();
-    res[Keys.userId] = userId;
-    res.addAll(await UserFitnessDataModelDb.getUserFitnessStatusJs(userId));
-
-    //--- To other user's devices ------------------------------------
-    final match = WsMessenger.generateWsMessage(
-        section: HttpCodes.sec_userData,
-        command: HttpCodes.com_updateProfileSettings
-    );
-    match[Keys.userId] = userId;
-    match[Keys.data] = await CommonMethods.getUserLoginInfo(userId, false);
-
-    // ignore: unawaited_futures
-    WsMessenger.sendToOtherDeviceAvoidMe(userId, deviceId, JsonHelper.mapToJson(match));
-
-    return res;
-  }
-*/
-  static Future<Map<String, dynamic>> addAdvertising(HttpRequest req, Map<String, dynamic> js) async{
-    final requesterId = js[Keys.requesterId];
-    final partName = js[Keys.partName];
-    final fileName = js[Keys.fileName];
-
-    if(requesterId == null || partName == null || fileName == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final body = req.store.get('Body');
-    final savedFile = await ServerNs.uploadFile(req, body, partName);
-
-    if(savedFile == null){
-      return generateResultError(HttpCodes.error_notUpload);
-    }
-
-    final okDb = await CommonMethods.addNewAdvertising(requesterId, js, savedFile.path);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not add new Advertising');
-    }
-
-    final res = generateResultOk();
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> deleteAdvertising(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final id = js['advertising_id'];
-
-    if(userId == null || id == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(userId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final okDb = await CommonMethods.deleteAdvertising(userId, id);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete Advertising');
-    }
-
-    final res = generateResultOk();
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> changeAdvertisingShowState(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final advId = js['advertising_id'];
-    final state = js[Keys.state];
-
-    if(userId == null || advId == null || state == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(userId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final okDb = await CommonMethods.changeAdvertisingShowState(userId, advId, state);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not update Advertising state');
-    }
-
-    final res = generateResultOk();
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> changeAdvertisingTitle(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final advId = js['advertising_id'];
-    final title = js[Keys.title];
-
-    if(userId == null || advId == null || title == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(userId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final okDb = await CommonMethods.changeAdvertisingTitle(userId, advId, title);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not update Advertising title');
-    }
-
-    final res = generateResultOk();
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> changeAdvertisingTag(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final advId = js['advertising_id'];
-    final tag = js['tag'];
-
-    if(userId == null || advId == null || tag == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(userId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final okDb = await CommonMethods.changeAdvertisingTag(userId, advId, tag);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not update Advertising tag');
-    }
-
-    final res = generateResultOk();
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> changeAdvertisingType(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final advId = js['advertising_id'];
-    final type = js[Keys.type];
-
-    if(userId == null || advId == null || type == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(userId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final okDb = await CommonMethods.changeAdvertisingType(userId, advId, type);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not update Advertising type');
-    }
-
-    final res = generateResultOk();
-    return res;
-  }
-
-  /*static Future<Map<String, dynamic>> changeAdvertisingPhoto(HttpRequest req, Map<String, dynamic> js) async{
-    final requesterId = js[Keys.requesterId];
-    final advId = js['advertising_id'];
-    final fileName = js[Keys.fileName];
-    final partName = js[Keys.partName];
-
-    if(requesterId == null || fileName == null || partName == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(requesterId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final body = req.store.get('Body');
-    final savedFile = await ServerNs.uploadFile(req, body, partName);
-
-    if(savedFile == null){
-      return generateResultError(HttpCodes.error_notUpload);
-    }
-
-    final okDb = await CommonMethods.changeAdvertisingPhoto(requesterId, advId, savedFile.path);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not update Advertising photo');
-    }
-
-    final res = generateResultOk();
-    res[Keys.fileUri] = PathsNs.genUrlDomainFromFilePath(PublicAccess.domain, PathsNs.getCurrentPath(), savedFile.path);
-
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> changeAdvertisingOrder(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final advId = js['advertising_id'];
-    final orderNum = js['order_num'];
-
-    if(userId == null || orderNum == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(userId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final okDb = await CommonMethods.changeAdvertisingOrder(userId, advId, orderNum);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not update Advertising orderNum');
-    }
-
-    final res = generateResultOk();
-
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> changeAdvertisingDate(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final advId = js['advertising_id'];
-    final section = js[Keys.section];
-    final dateTs = js[Keys.date];
-
-    if(userId == null || section == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(userId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final okDb = await CommonMethods.changeAdvertisingDate(userId, advId, section, dateTs);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not update Advertising date');
-    }
-
-    final res = generateResultOk();
-
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> changeAdvertisingLink(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final advId = js['advertising_id'];
-    final link = js['link'];
-
-    if(userId == null || link == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final isManager = await UserModelDb.isManagerUser(userId);
-
-    if(!isManager){
-      return generateResultError(HttpCodes.error_canNotAccess);
-    }
-
-    final okDb = await CommonMethods.changeAdvertisingLink(userId, advId, link);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError, cause: 'Not update Advertising link');
-    }
-
-    final res = generateResultOk();
-
-    return res;
-  }*/
 }

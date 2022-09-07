@@ -277,6 +277,10 @@ class GraphHandler {
       return setDailyText(wrapper);
     }
 
+    if (request == 'delete_daily_text') {
+      return deleteDailyText(wrapper);
+    }
+
     if (request == 'get_daily_text_data') {
       return getDailyTextData(wrapper);
     }
@@ -975,10 +979,30 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    final isOk = await CommonMethods.insertDailyText(id, text, date);
+    final eventId = await CommonMethods.insertDailyText(id, text, date);
 
-    if(isOk) {
+    if(eventId == null) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not set daily text');
+    }
+
+    final res = generateResultOk();
+    res[Keys.id] = eventId;
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> deleteDailyText(GraphHandlerWrap wrapper) async{
+    final date = wrapper.bodyJSON[Keys.date];
+    final id = wrapper.bodyJSON[Keys.id];
+
+    if(id == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final isOk = await CommonMethods.deleteDailyText(id, date);
+
+    if(!isOk) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete daily text');
     }
 
     final res = generateResultOk();
@@ -989,11 +1013,18 @@ class GraphHandler {
     var startDate = wrapper.bodyJSON[Keys.date];
     var endDate = wrapper.bodyJSON['end_date'];
 
-    startDate ??= DateHelper.toTimestamp(GregorianDate().getFirstOfMonth().convertToSystemDate());
+
+    if(startDate == null) {
+      final s = GregorianDate().getFirstOfMonth();
+      s.changeTime(0, 0, 0, 0);
+      startDate = DateHelper.toTimestamp(s.convertToSystemDate());
+    }
 
     if(endDate == null) {
-      final s = DateHelper.tsToSystemDate(startDate)!;
-      endDate = DateHelper.toTimestamp(GregorianDate.from(s).getEndOfMonth().convertToSystemDate());
+      final start = DateHelper.tsToSystemDate(startDate)!;
+      final end = GregorianDate.from(start).getEndOfMonth();
+      end.changeTime(23, 59, 59, 999);
+      endDate = DateHelper.toTimestamp(end.convertToSystemDate());
     }
 
     final list = await CommonMethods.getDailyText(startDate, endDate);

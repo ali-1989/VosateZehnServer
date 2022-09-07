@@ -714,8 +714,8 @@ class CommonMethods {
     }).toList();
   }
 
-  static Future<bool> insertDailyText(int? id, String txt, String date) async {
-    var kv = <String, dynamic>{};
+  static Future<int?> insertDailyText(int? id, String txt, String date) async {
+    final kv = <String, dynamic>{};
     kv['text'] =txt;
     kv['date'] = date;
 
@@ -724,9 +724,20 @@ class CommonMethods {
       kv['id'] = id;
     }
 
-    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_SimpleAdvertising, kv, where: ' id = ${id?? -1}');
+    final cursor = await PublicAccess.psql2.upsertWhereKvReturning(
+        DbNames.T_dailyText, kv, where: ' id = ${id?? -1}', returning: 'id');
 
-    if (cursor == null || cursor < 1) {
+    if (cursor == null || cursor.isEmpty) {
+      return null;
+    }
+
+    return cursor[0].toMap()['id'];
+  }
+
+  static Future<bool> deleteDailyText(int id, String? date) async {
+    final cursor = await PublicAccess.psql2.delete(DbNames.T_dailyText,  ' id = $id');
+
+    if (cursor == null || cursor < 0) {
       return false;
     }
 

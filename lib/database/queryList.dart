@@ -277,7 +277,7 @@ class QueryList {
 
     q = q.replaceFirst('#tb', DbNames.T_dailyText);
 
-    var w = "date >= '$start'::ts AND date <= '$end'::ts";
+    var w = "date >= '$start'::timestamp AND date <= '$end'::timestamp";
 
     q = q.replaceFirst('#w', w);
     return q;

@@ -23,7 +23,7 @@ class LoginZone {
   }
 
   static Future<Map<String, dynamic>> loginByUserName(GraphHandlerWrap wrapper) async {
-    var js = wrapper.bodyJSON;
+    final js = wrapper.bodyJSON;
 
     var userName = js[Keys.userName]?? '';
     final deviceId = js[Keys.deviceId];

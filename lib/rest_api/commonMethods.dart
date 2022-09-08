@@ -676,6 +676,29 @@ class CommonMethods {
     return true;
   }
 
+  static Future<bool> deleteAdvertising(String tag) async {
+    final cursor = await PublicAccess.psql2.delete(DbNames.T_SimpleAdvertising, " tag = '$tag'");
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static Future<bool> setAdvertisingUrl(String tag, String? url) async {
+    final kv = <String, dynamic>{};
+    kv['click_link'] = url;
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_SimpleAdvertising, kv, where: " tag = '$tag'");
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
   static Future<List<Map>?> getAdvertising(int userId, Map jsData) async {
     final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
 

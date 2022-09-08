@@ -269,6 +269,14 @@ class GraphHandler {
       return setAdvertising(wrapper);
     }
 
+    if (request == 'delete_advertising_image') {
+      return deleteAdvertisingImage(wrapper);
+    }
+
+    if (request == 'set_advertising_url') {
+      return setAdvertisingUrl(wrapper);
+    }
+
     if (request == 'get_advertising_data') {
       return getAdvertisingData(wrapper);
     }
@@ -737,7 +745,7 @@ class GraphHandler {
   }
 
   static Future<Map<String, dynamic>> sortBucketContent(GraphHandlerWrap wrapper) async{
-    final List<int>? medias = wrapper.bodyJSON['media_ids'];
+    final medias = Converter.correctList<int>(wrapper.bodyJSON['media_ids']);
     final parentId = wrapper.bodyJSON['parent_id'];
     final contentId = wrapper.bodyJSON[Keys.id];
 
@@ -942,6 +950,41 @@ class GraphHandler {
 
     final res = generateResultOk();
 
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> deleteAdvertisingImage(GraphHandlerWrap wrapper) async{
+    final tag = wrapper.bodyJSON['tag'];
+
+    if(tag == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final result = await CommonMethods.deleteAdvertising(tag);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not delete adv image');
+    }
+
+    final res = generateResultOk();
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> setAdvertisingUrl(GraphHandlerWrap wrapper) async{
+    final tag = wrapper.bodyJSON['tag'];
+    final url = wrapper.bodyJSON['url'];
+
+    if(tag == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final result = await CommonMethods.setAdvertisingUrl(tag, url);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set adv url');
+    }
+
+    final res = generateResultOk();
     return res;
   }
 

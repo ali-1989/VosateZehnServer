@@ -2,8 +2,8 @@
 class UserTypeModel {
   static const UserType simpleUser = UserType.simpleUser;
   static const UserType managerUser = UserType.managerUser;
-  static const String vosateZehnApp = 'vosate_zehn';
-  static const String vosateZehnManagerApp = 'vosate_zehn Manager';
+  static const String vosateZehnApp = 'VosateZehn';
+  static const String vosateZehnManagerApp = 'VosateZehn Manager';
   static const int managerUserTypeNumber = 9;
 
   UserTypeModel();

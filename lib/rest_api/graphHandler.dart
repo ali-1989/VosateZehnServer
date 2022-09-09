@@ -19,6 +19,7 @@ import 'package:vosate_zehn_server/rest_api/commonMethods.dart';
 import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
 import 'package:vosate_zehn_server/rest_api/loginZone.dart';
 import 'package:vosate_zehn_server/rest_api/registerZone.dart';
+import 'package:vosate_zehn_server/rest_api/searchFilterTool.dart';
 import 'package:vosate_zehn_server/rest_api/wsMessenger.dart';
 
 class GraphHandlerWrap {
@@ -129,6 +130,10 @@ class GraphHandler {
   static Future<Map<String, dynamic>> _process(GraphHandlerWrap wrapper) async {
     final request = wrapper.zoneRequest;
     
+    if (request == 'get_app_parameters') {
+      return getAppParameters(wrapper);
+    }
+
     if (request == 'send_otp') {
       return RegisterZone.preRegisterByMobileAndSendOtp(wrapper);
     }
@@ -293,10 +298,22 @@ class GraphHandler {
       return getDailyTextData(wrapper);
     }
 
+    if (request == 'get_home_page_data') {
+      return getHomePageData(wrapper);
+    }
+
 
     return generateResultError(HttpCodes.error_requestNotDefined);
   }
   ///==========================================================================================================
+  static Future<Map<String, dynamic>> getAppParameters(GraphHandlerWrap wrap) async{
+
+    final res = generateResultOk();
+    res['aid_pop_message'] = await CommonMethods.getTextData('aid_dialog');
+
+    return res;
+  }
+
   static Future<Map<String, dynamic>> setUserIsLogoff(GraphHandlerWrap wrap) async{
     ///for security: check requester be admin or userId == requester
     dynamic userId = wrap.bodyJSON[Keys.forUserId];
@@ -628,7 +645,7 @@ class GraphHandler {
       }
     }
 
-    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+    final mediaList = await CommonMethods.getMediasByIds(mediaIds.toList());
 
     final res = generateResultOk();
     res['bucket_list'] = buckets;
@@ -665,7 +682,7 @@ class GraphHandler {
       }
     }
 
-    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+    final mediaList = await CommonMethods.getMediasByIds(mediaIds.toList());
 
     final res = generateResultOk();
     res['sub_bucket_list'] = buckets;
@@ -790,7 +807,7 @@ class GraphHandler {
       mediaIds.addAll(Converter.correctList<int>(content['media_ids'])!);
     }
 
-    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+    final mediaList = await CommonMethods.getMediasByIds(mediaIds.toList());
 
     final res = generateResultOk();
     res['content'] = content;
@@ -849,7 +866,7 @@ class GraphHandler {
       }
     }
 
-    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+    final mediaList = await CommonMethods.getMediasByIds(mediaIds.toList());
 
     final res = generateResultOk();
     res['speaker_list'] = speakers;
@@ -989,8 +1006,7 @@ class GraphHandler {
   }
 
   static Future<Map<String, dynamic>> getAdvertisingData(GraphHandlerWrap wrapper) async{
-
-    final advertising = await CommonMethods.getAdvertising(wrapper.userId!, wrapper.bodyJSON);
+    final advertising = await CommonMethods.getAdvertising(wrapper.bodyJSON);
 
     if(advertising == null) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not get advertising');
@@ -1004,7 +1020,7 @@ class GraphHandler {
       }
     }
 
-    final mediaList = await CommonMethods.getMediasByIds(wrapper.userId!, mediaIds.toList());
+    final mediaList = await CommonMethods.getMediasByIds(mediaIds.toList());
 
     final res = generateResultOk();
     res['advertising_list'] = advertising;
@@ -1078,6 +1094,21 @@ class GraphHandler {
 
     final res = generateResultOk();
     res[Keys.dataList] = list;
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> getHomePageData(GraphHandlerWrap wrapper) async{
+    final sf = SearchFilterTool();
+    sf.limit = 8;
+
+    final meditations = await CommonMethods.getBucketsBy(sf, '4');
+    final video = await CommonMethods.getBucketsBy(sf, '1');
+    final news = await CommonMethods.getNewBuckets();
+
+    final res = generateResultOk();
+    res['new_list'] = news;
+    res['new_meditation_list'] = meditations;
+    res['new_video_list'] = video;
     return res;
   }
 

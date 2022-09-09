@@ -82,6 +82,20 @@ class QueryList {
     return q;
   }
 
+  static String getNewBuckets(){
+    var q = '''SELECT * FROM #tb WHERE (#w) 
+        order by date DESC
+        limit 12
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_Bucket);
+
+    var w = 'true';
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
+
   static String getBucketsCount(SearchFilterTool sf){
     var q = '''SELECT count(id) as count FROM #tb WHERE (#w) AND
         bucket_type = #key

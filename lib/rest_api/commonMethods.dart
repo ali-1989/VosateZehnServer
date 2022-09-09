@@ -191,6 +191,35 @@ class CommonMethods {
     }).toList();
   }
 
+  static Future<List<Map>?> getBucketsBy(SearchFilterTool sf, String key) async {
+    var q = QueryList.getBuckets(sf);
+    q = q.replaceFirst('#key', '$key');
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
+  }
+
+  static Future<List<Map>?> getNewBuckets() async {
+    var q = QueryList.getNewBuckets();
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
+  }
+
   static Future<int> getBucketsCount(Map jsData) async {
     final key = jsData[Keys.key];
     final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
@@ -280,7 +309,7 @@ class CommonMethods {
     return false;
   }
 
-  static Future getMediasByIds(int userId, List mediaIds) async {
+  static Future getMediasByIds(List mediaIds) async {
     if(mediaIds.isEmpty){
       return <Map<String, dynamic>>[];
     }
@@ -699,7 +728,7 @@ class CommonMethods {
     return true;
   }
 
-  static Future<List<Map>?> getAdvertising(int userId, Map jsData) async {
+  static Future<List<Map>?> getAdvertising(Map jsData) async {
     final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
 
     var q = QueryList.getAdvertising(sf);

@@ -46,7 +46,7 @@ class PublicAccess {
       domain = 'http://vosatezehn.com:${Constants.port}';
     }
     else {
-      domain = 'http://192.168.1.103:${Constants.port}'; //1.103 , 43.140
+      domain = 'http://192.168.43.140:${Constants.port}'; //1.103 , 43.140
     }
   }
 

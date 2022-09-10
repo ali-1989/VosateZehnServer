@@ -82,20 +82,6 @@ class QueryList {
     return q;
   }
 
-  static String getNewBuckets(){
-    var q = '''SELECT * FROM #tb WHERE (#w) 
-        order by date DESC
-        limit 12
-        ''';
-
-    q = q.replaceFirst('#tb', DbNames.T_Bucket);
-
-    var w = 'true';
-
-    q = q.replaceFirst('#w', w);
-    return q;
-  }
-
   static String getBucketsCount(SearchFilterTool sf){
     var q = '''SELECT count(id) as count FROM #tb WHERE (#w) AND
         bucket_type = #key
@@ -292,6 +278,36 @@ class QueryList {
     q = q.replaceFirst('#tb', DbNames.T_dailyText);
 
     var w = "date >= '$start'::timestamp AND date <= '$end'::timestamp";
+
+    q = q.replaceFirst('#w', w);
+    return q;
+  }
+
+  static String getNewSubBucketsByType(SearchFilterTool sf){
+    var q = '''SELECT t1.bucket_type, t2.* FROM #tb1 AS t1
+    INNER JOIN #tb2 AS t2 ON t1.id = t2.parent_id
+    WHERE t1.bucket_type = #type AND t1.is_hide = false
+        order by date DESC
+        limit #lim
+        ''';
+
+    q = q.replaceFirst('#tb1', DbNames.T_Bucket);
+    q = q.replaceFirst('#tb2', DbNames.T_SubBucket);
+    q = q.replaceFirst('#lim', '${sf.limit}');
+
+    return q;
+  }
+
+  static String getNewSubBuckets(){
+    var q = '''SELECT * FROM #tb WHERE (#w) 
+        AND is_hide = false
+        order by date DESC
+        limit 12
+        ''';
+
+    q = q.replaceFirst('#tb', DbNames.T_SubBucket);
+
+    var w = 'true';
 
     q = q.replaceFirst('#w', w);
     return q;

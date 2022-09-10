@@ -662,17 +662,17 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    final buckets = await CommonMethods.getSubBuckets(wrapper.bodyJSON);
+    final subBuckets = await CommonMethods.getSubBuckets(wrapper.bodyJSON);
 
-    if(buckets == null) {
+    if(subBuckets == null) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not get sub-bucket');
     }
 
     final count = await CommonMethods.getSubBucketsCount(wrapper.bodyJSON);
 
-    var mediaIds = <int>{};
+    final mediaIds = <int>{};
 
-    for(final k in buckets){
+    for(final k in subBuckets){
       if(k['media_id'] != null){
         mediaIds.add(k['media_id']);
       }
@@ -685,7 +685,7 @@ class GraphHandler {
     final mediaList = await CommonMethods.getMediasByIds(mediaIds.toList());
 
     final res = generateResultOk();
-    res['sub_bucket_list'] = buckets;
+    res['sub_bucket_list'] = subBuckets;
     res['media_list'] = mediaList?? [];
     res['all_count'] = count;
 
@@ -1101,11 +1101,52 @@ class GraphHandler {
     final sf = SearchFilterTool();
     sf.limit = 8;
 
-    final meditations = await CommonMethods.getBucketsBy(sf, '4');
-    final video = await CommonMethods.getBucketsBy(sf, '1');
-    final news = await CommonMethods.getNewBuckets();
+    final meditations = await CommonMethods.getSubBucketsBy(sf, '4');
+    final video = await CommonMethods.getSubBucketsBy(sf, '1');
+    final news = await CommonMethods.getNewSubBuckets();
+
+    final mediaIds = <int>{};
+
+    if(news != null) {
+      for (final k in news) {
+        if (k['media_id'] != null) {
+          mediaIds.add(k['media_id']);
+        }
+
+        if (k['cover_id'] != null) {
+          mediaIds.add(k['cover_id']);
+        }
+      }
+    }
+
+    if(meditations != null) {
+      for (final k in meditations) {
+        if (k['media_id'] != null) {
+          mediaIds.add(k['media_id']);
+        }
+
+        if (k['cover_id'] != null) {
+          mediaIds.add(k['cover_id']);
+        }
+      }
+    }
+
+    if(video != null) {
+      for (final k in video) {
+        if (k['media_id'] != null) {
+          mediaIds.add(k['media_id']);
+        }
+
+        if (k['cover_id'] != null) {
+          mediaIds.add(k['cover_id']);
+        }
+      }
+    }
+
+    final mediaList = await CommonMethods.getMediasByIds(mediaIds.toList());
 
     final res = generateResultOk();
+    res['media_list'] = mediaList;
     res['new_list'] = news;
     res['new_meditation_list'] = meditations;
     res['new_video_list'] = video;

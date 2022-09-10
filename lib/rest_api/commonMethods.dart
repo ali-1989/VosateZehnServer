@@ -191,35 +191,6 @@ class CommonMethods {
     }).toList();
   }
 
-  static Future<List<Map>?> getBucketsBy(SearchFilterTool sf, String key) async {
-    var q = QueryList.getBuckets(sf);
-    q = q.replaceFirst('#key', '$key');
-
-    final cursor = await PublicAccess.psql2.queryCall(q);
-
-    if (cursor == null || cursor.isEmpty) {
-      return <Map<String, dynamic>>[];
-    }
-
-    return cursor.map((e) {
-      return (e.toMap() as Map<String, dynamic>);
-    }).toList();
-  }
-
-  static Future<List<Map>?> getNewBuckets() async {
-    var q = QueryList.getNewBuckets();
-
-    final cursor = await PublicAccess.psql2.queryCall(q);
-
-    if (cursor == null || cursor.isEmpty) {
-      return <Map<String, dynamic>>[];
-    }
-
-    return cursor.map((e) {
-      return (e.toMap() as Map<String, dynamic>);
-    }).toList();
-  }
-
   static Future<int> getBucketsCount(Map jsData) async {
     final key = jsData[Keys.key];
     final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
@@ -794,6 +765,35 @@ class CommonMethods {
     }
 
     return true;
+  }
+
+  static Future<List<Map>?> getSubBucketsBy(SearchFilterTool sf, String key) async {
+    var q = QueryList.getNewSubBucketsByType(sf);
+    q = q.replaceFirst('#type', '$key');
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
+  }
+
+  static Future<List<Map>?> getNewSubBuckets() async {
+    var q = QueryList.getNewSubBuckets();
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
   }
 
 

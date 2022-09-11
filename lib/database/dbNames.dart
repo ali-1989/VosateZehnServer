@@ -56,6 +56,7 @@ class DbNames {
   static const T_Bucket = 'bucket';
   static const T_SubBucket = 'sub_bucket';
   static const T_BucketContent = 'bucket_content';
+  static const T_seenContent = 'seen_bucket_content';
   static const T_Media = 'media';
   static const T_speaker = 'speaker';
   static const T_dailyText = 'daily_text';

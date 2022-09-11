@@ -374,6 +374,8 @@ class DatabaseNs {
     await DB.execution(QTbl_SubBucket);
     await DB.execution(QTbl_SubBucketContent);
     await DB.execution(QTbl_dailyText);
+
+    await DB.execution(QTbl_seenContent);
   }
 
   static Future prepareFunctions() async{
@@ -1233,6 +1235,35 @@ class DatabaseNs {
        CONSTRAINT uk1_#tb UNIQUE (key)
       );
       '''.replaceAll('#tb', DbNames.T_TextHolder);
+
+
+  static final String QTbl_seenContent = '''
+  CREATE TABLE IF NOT EXISTS #tb (
+       id SERIAL,
+       user_id BIGINT NOT NULL,
+       sub_bucket_id BIGINT DEFAULT NULL,
+       content_id BIGINT NOT NULL,
+       media_ids BIGINT[] DEFAULT ARRAY[]::BIGINT[],
+       update_date TIMESTAMP DEFAULT (now() at time zone 'utc'),
+       CONSTRAINT pk_#tb PRIMARY KEY (id),
+       CONSTRAINT uk1_#tb UNIQUE (user_id, content_id)
+      );
+      '''.replaceAll('#tb', DbNames.T_seenContent);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   //======	Function	=====================================================================
   /*static final String Q_fn_utc = "CREATE OR REPLACE FUNCTION utc()\n" +

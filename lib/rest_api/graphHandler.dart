@@ -302,6 +302,14 @@ class GraphHandler {
       return getHomePageData(wrapper);
     }
 
+    if (request == 'set_content_seen') {
+      return setContentSeen(wrapper);
+    }
+
+    if (request == 'search_on_data') {
+      return searchOnData(wrapper);
+    }
+
 
     return generateResultError(HttpCodes.error_requestNotDefined);
   }
@@ -812,6 +820,7 @@ class GraphHandler {
     final res = generateResultOk();
     res['content'] = content;
     res['media_list'] = mediaList?? [];
+    res['seen_list'] = await CommonMethods.getContentSeenList(wrapper.userId!, subBucketId, content['id']);
     res['speaker'] = speaker;
     //res['all_count'] = count;
 
@@ -1101,8 +1110,8 @@ class GraphHandler {
     final sf = SearchFilterTool();
     sf.limit = 8;
 
-    final meditations = await CommonMethods.getSubBucketsBy(sf, '4');
-    final video = await CommonMethods.getSubBucketsBy(sf, '1');
+    final meditations = await CommonMethods.getNewSubBucketsByType(sf, '4');
+    final video = await CommonMethods.getNewSubBucketsByType(sf, '1');
     final news = await CommonMethods.getNewSubBuckets();
 
     final mediaIds = <int>{};
@@ -1150,6 +1159,40 @@ class GraphHandler {
     res['new_list'] = news;
     res['new_meditation_list'] = meditations;
     res['new_video_list'] = video;
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> setContentSeen(GraphHandlerWrap wrapper) async{
+    final subBucketId = wrapper.bodyJSON[Keys.id];
+    final contentId = wrapper.bodyJSON['content_id'];
+    final mediaId = wrapper.bodyJSON['media_id'];
+
+    if(subBucketId == null || contentId == null || mediaId == null || wrapper.userId == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final isOk = await CommonMethods.addContentSeen(wrapper.userId!, subBucketId, contentId, mediaId);
+
+    if(!isOk){
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set content seen');
+    }
+
+    final res = generateResultOk();
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> searchOnData(GraphHandlerWrap wrapper) async{
+    final searchFilter = wrapper.bodyJSON[Keys.searchFilter];
+
+    if(searchFilter == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final sf = SearchFilterTool.fromMap(searchFilter);
+    final list = await CommonMethods.searchSubBuckets(sf);
+
+    final res = generateResultOk();
+    res[Keys.dataList] = list;
     return res;
   }
 

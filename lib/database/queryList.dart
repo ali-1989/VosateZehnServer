@@ -298,6 +298,21 @@ class QueryList {
     return q;
   }
 
+  static String searchSubBuckets(SearchFilterTool sf){
+    var q = '''SELECT t1.bucket_type, t2.* FROM #tb1 AS t1
+    INNER JOIN #tb2 AS t2 ON t1.id = t2.parent_id
+    WHERE t1.bucket_type = #type AND t1.is_hide = false
+        order by date DESC
+        limit #lim
+        ''';
+
+    q = q.replaceFirst('#tb1', DbNames.T_Bucket);
+    q = q.replaceFirst('#tb2', DbNames.T_SubBucket);
+    q = q.replaceFirst('#lim', '${sf.limit}');
+
+    return q;
+  }
+
   static String getNewSubBuckets(){
     var q = '''SELECT * FROM #tb WHERE (#w) 
         AND is_hide = false
@@ -310,6 +325,23 @@ class QueryList {
     var w = 'true';
 
     q = q.replaceFirst('#w', w);
+    return q;
+  }
+
+  static String addContentSeen(){
+    var q = '''
+    INSERT INTO #tb
+    (user_id, sub_bucket_id, content_id, media_ids)
+    VALUES (#userId, #subId, #contentId, array[#mediaId])
+    
+    ON CONFLICT
+        ON CONSTRAINT uk1_#tb
+        DO UPDATE
+        SET media_ids = array_append(seen_bucket_content.media_ids, #mediaId::BIGINT);
+        ''';
+
+    q = q.replaceAll('#tb', DbNames.T_seenContent);
+
     return q;
   }
 

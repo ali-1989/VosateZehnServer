@@ -767,9 +767,23 @@ class CommonMethods {
     return true;
   }
 
-  static Future<List<Map>?> getSubBucketsBy(SearchFilterTool sf, String key) async {
+  static Future<List<Map>?> getNewSubBucketsByType(SearchFilterTool sf, String type) async {
     var q = QueryList.getNewSubBucketsByType(sf);
-    q = q.replaceFirst('#type', '$key');
+    q = q.replaceFirst('#type', '$type');
+
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor == null || cursor.isEmpty) {
+      return <Map<String, dynamic>>[];
+    }
+
+    return cursor.map((e) {
+      return (e.toMap() as Map<String, dynamic>);
+    }).toList();
+  }
+
+  static Future<List<Map>> searchSubBuckets(SearchFilterTool sf) async {
+    var q = QueryList.searchSubBuckets(sf);
 
     final cursor = await PublicAccess.psql2.queryCall(q);
 
@@ -794,6 +808,42 @@ class CommonMethods {
     return cursor.map((e) {
       return (e.toMap() as Map<String, dynamic>);
     }).toList();
+  }
+
+  static Future<bool> addContentSeen(int userId, int subBucketId, int contentId, int mediaId) async {
+    var q = QueryList.addContentSeen();
+    q = q.replaceFirst('#userId', '$userId');
+    q = q.replaceFirst('#subId', '$subBucketId');
+    q = q.replaceFirst('#contentId', '$contentId');
+    q = q.replaceAll('#mediaId', '$mediaId');
+
+    final cursor = await PublicAccess.psql2.execution(q);
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
+  }
+
+  static Future<List<int>> getContentSeenList(int userId, int subBucketId, int contentId) async {
+    final res = <int>[];
+
+    var q = '''
+      SELECT * FROM #tb WHERE user_id = #userId AND sub_bucket_id = #subBucketId AND content_id = #contentId;
+    '''
+    .replaceFirst('#tb', DbNames.T_seenContent)
+    .replaceFirst('#userId', '$userId')
+    .replaceFirst('#subBucketId', '$subBucketId')
+    .replaceFirst('#contentId', '$contentId');
+
+    final cursor = await PublicAccess.psql2.getColumn<List>(q, 'media_ids');
+
+    if (cursor == null) {
+      return res;
+    }
+
+    return cursor.map((e) => e as int).toList();
   }
 
 

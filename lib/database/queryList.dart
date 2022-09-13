@@ -299,16 +299,29 @@ class QueryList {
   }
 
   static String searchSubBuckets(SearchFilterTool sf){
-    var q = '''SELECT t1.bucket_type, t2.* FROM #tb1 AS t1
-    INNER JOIN #tb2 AS t2 ON t1.id = t2.parent_id
-    WHERE t1.bucket_type = #type AND t1.is_hide = false
-        order by date DESC
-        limit #lim
+    var q = '''SELECT * FROM #tb1 
+    WHERE (#w)
+     AND is_hide = false
+        
+        ORDER BY date DESC
+        LIMIT #lim
         ''';
 
-    q = q.replaceFirst('#tb1', DbNames.T_Bucket);
-    q = q.replaceFirst('#tb2', DbNames.T_SubBucket);
+    q = q.replaceFirst('#tb1', DbNames.T_SubBucket);
     q = q.replaceFirst('#lim', '${sf.limit}');
+
+    var w = 'true';
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+      w += ' AND (title LIKE $t OR description LIKE $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
 
     return q;
   }

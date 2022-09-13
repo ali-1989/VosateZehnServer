@@ -94,17 +94,17 @@ class ServerNs {
   }
   ///------------------------------------------------------------------------------------------------
   static Future<File?> uploadFile(HttpRequest req, Map body, String paramName, [String? newFileName]) async {
-    var upFile = body[paramName];
+    final upFile = body[paramName];
 
     if(upFile == null){
       return null;
     }
 
-    var uploadedFile = upFile as HttpBodyFileUpload;
-    var fileBytes = (uploadedFile.content as List<int>);
+    final uploadedFile = upFile as HttpBodyFileUpload;
+    final fileBytes = (uploadedFile.content as List<int>);
 
-    var fileName = uploadedFile.filename;
-    var file = getSaveFile(req, newFileName?? fileName);
+    final fileName = uploadedFile.filename;
+    final file = getSaveFile(req, newFileName?? fileName);
 
     await file.create(recursive: true);
     await file.writeAsBytes(fileBytes);
@@ -114,12 +114,16 @@ class ServerNs {
   ///------------------------------------------------------------------------------------------------
   static File getSaveFile(HttpRequest req, String fileName){
 
-    var find = _publicCategories.entries.firstWhereSafe((element) {
+    if(fileName.startsWith(r'..')){
+      fileName = fileName.substring(1);
+    }
+
+    final find = _publicCategories.entries.firstWhereSafe((element) {
       return element.value.hasMatch(fileName);
     });
 
     var base;
-    var today = DateHelper.todayUtcDirectoryName();
+    final today = DateHelper.todayUtcDirectoryName();
 
     if(req.store.get('chat') != null) {
       base = PathsNs.getChatFileDir() + Platform.pathSeparator + today + Platform.pathSeparator;

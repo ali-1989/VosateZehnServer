@@ -544,7 +544,7 @@ class GraphHandler {
 
     if(subBucketData['duration'] == null){
       try {
-        final args = ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=duration',
+        final args = ['-v', 'quiet', '-hide_banner', '-show_entries', 'stream=duration',
           '-of', 'default=noprint_wrappers=1:nokey=1', mediaFile?.path?? ''];
 
         final result = await Process.run('ffprobe', args);
@@ -574,7 +574,7 @@ class GraphHandler {
         return generateResultError(HttpCodes.error_notUpload);
       }
 
-      coverId = await CommonMethods.insertMedia(coverFile);
+      coverId = await CommonMethods.insertMedia(coverFile, extension: '.png');
     }
 
     if(wrapper.bodyJSON['delete_cover_id'] != null){ // is edit mode
@@ -725,7 +725,7 @@ class GraphHandler {
 
       if(info['duration'] == null){
         try {
-          final args = ['-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=duration',
+          final args = ['-v', 'quiet', '-hide_banner', '-show_entries', 'stream=duration',
             '-of', 'default=noprint_wrappers=1:nokey=1', mediaFile.path];
 
           final result = await Process.run('ffprobe', args);
@@ -1191,8 +1191,23 @@ class GraphHandler {
     final sf = SearchFilterTool.fromMap(searchFilter);
     final list = await CommonMethods.searchSubBuckets(sf);
 
+    final mediaIds = <int>{};
+
+    for (final k in list) {
+      if (k['media_id'] != null) {
+        mediaIds.add(k['media_id']);
+      }
+
+      if (k['cover_id'] != null) {
+        mediaIds.add(k['cover_id']);
+      }
+    }
+
+    final mediaList = await CommonMethods.getMediasByIds(mediaIds.toList());
+
     final res = generateResultOk();
-    res[Keys.dataList] = list;
+    res['sub_bucket_list'] = list;
+    res['media_list'] = mediaList;
     return res;
   }
 

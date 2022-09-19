@@ -52,16 +52,11 @@ class HttpCodes {
   //------------ sections -----------------------------------------------------
   static const sec_command = 'command';
   static const sec_userData = 'UserData';
-  static const sec_ticketData = 'TicketData';
   //------------ commands -----------------------------------------------------
   static const com_forceLogOff = 'ForceLogOff';
   static const com_forceLogOffAll = 'ForceLogOffAll';
   static const com_talkMeWho = 'TalkMeWho';
   static const com_sendDeviceInfo = 'SendDeviceInfo';
-  static const com_userSeen = 'UserSeen';
-  static const com_serverMessage = 'ServerMessage';
-  static const com_newMessage = 'NewMessage';
-  static const com_delMessage = 'DeleteMessage';
-  static const com_selfSeen = 'SelfSeen';
+  static const com_messageForUser = 'messageForUser';
   static const com_updateProfileSettings = 'UpdateProfileSettings';
 }

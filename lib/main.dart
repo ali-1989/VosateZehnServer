@@ -11,7 +11,7 @@ import 'package:vosate_zehn_server/database/databaseNs.dart';
 import 'package:vosate_zehn_server/models/countryModel.dart';
 import 'package:vosate_zehn_server/models/currencyModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
-import 'package:vosate_zehn_server/rest_api/ServerNs.dart';
+import 'package:vosate_zehn_server/rest_api/serverNs.dart';
 import 'package:vosate_zehn_server/rest_api/wsServerNs.dart';
 import 'package:vosate_zehn_server/webSite/webNs.dart';
 

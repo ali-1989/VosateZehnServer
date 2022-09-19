@@ -38,6 +38,13 @@ class WsServerNs {
   static Alfred prepareWsServer(){
     final wsServer = Alfred();
 
+    wsServer.all('/*', (req, res) {
+      res.headers.add('Access-Control-Allow-Origin', '*');
+      res.headers.add('Access-Control-Allow-Headers', '*');
+      res.headers.add('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, PUT, DELETE, HEAD');
+      }
+    );
+
     wsServer.get('/ws', (req, res) {
       return WebSocketSession(
           onOpen: (ws) {
@@ -183,6 +190,8 @@ class WsServerNs {
         sendUserMessages(ws, userId);
       }
 
+      sendCommonMessages(ws);
+
       return;
     }
     //--------------------------------------------------------------------------------------------------
@@ -307,17 +316,20 @@ class WsServerNs {
       for (var i = 0; i < cursor.length; i++) {
         final row = cursor[i].toMap();
         final id = row['id'];
+        final data = {};
+
+        data['message_id'] = id;
+        data['message'] = row['message'];
+        data['start_time'] = row['start_time'];
+        data['expire_time'] = row['expire_time'];
+        data['extra_js'] = row['extra_js'];
+        data['type'] = row['type'];
+        data['must_show_count'] = row['show_count'];
 
         final json = <String, dynamic>{};
-        json[Keys.command] = 'server_message';
-        json['id'] = id;
-        json['user_id'] = userId;
-        json['message'] = row['message'];
-        json['start_time'] = row['start_time'];
-        json['expire_time'] = row['expire_time'];
-        json['extra_js'] = row['extra_js'];
-        json['type'] = row['type'];
-        json['must_show_count'] = row['show_count'];
+        json[Keys.command] = HttpCodes.com_messageForUser;
+        json[Keys.userId] = userId;
+        json[Keys.data] = data;
 
         sendData(ws, JsonHelper.mapToJson(json));
 
@@ -326,6 +338,31 @@ class WsServerNs {
           // ignore: unawaited_futures
           PublicAccess.psql2.updateKv(DbNames.T_SystemMessageVsUser, hm, ' id = $id');
         }
+      }
+    }
+  }
+
+  static void sendCommonMessages(WebSocket ws) async{
+    final q = '''SELECT * FROM ${DbNames.T_SystemMessageVsCommon} WHERE expire_time >= (now() at time zone 'utc');''';
+    final cursor = await PublicAccess.psql2.queryCall(q);
+
+    if (cursor != null && cursor.isNotEmpty) {
+      for (var i = 0; i < cursor.length; i++) {
+        final row = cursor[i].toMap();
+        final data = {};
+
+        data['message_id'] = row['id'];
+        data['message'] = row['message'];
+        data['start_time'] = row['start_time'];
+        data['expire_time'] = row['expire_time'];
+        data['extra_js'] = row['extra_js'];
+        data['type'] = row['type'];
+
+        final json = <String, dynamic>{};
+        json[Keys.command] = HttpCodes.com_messageForUser;
+        json[Keys.data] = data;
+
+        sendData(ws, JsonHelper.mapToJson(json));
       }
     }
   }

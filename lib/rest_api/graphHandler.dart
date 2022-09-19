@@ -13,7 +13,7 @@ import 'package:vosate_zehn_server/database/models/users.dart';
 import 'package:vosate_zehn_server/database/models/userNameId.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
-import 'package:vosate_zehn_server/rest_api/ServerNs.dart';
+import 'package:vosate_zehn_server/rest_api/serverNs.dart';
 import 'package:vosate_zehn_server/rest_api/adminCommands.dart';
 import 'package:vosate_zehn_server/rest_api/commonMethods.dart';
 import 'package:vosate_zehn_server/rest_api/httpCodes.dart';

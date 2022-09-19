@@ -632,16 +632,18 @@ class DatabaseNs {
 
   // extra_js: 'CallBackKey'
   static final String QTbl_SystemMessageVsCommon = '''
- 	 CREATE TABLE IF NOT EXISTS ${DbNames.T_SystemMessageVsCommon} (
- 		id BIGINT NOT NULL DEFAULT nextval('${DbNames.Seq_SystemMessage}'),
+ 	 CREATE TABLE IF NOT EXISTS #tb (
+ 		id BIGINT NOT NULL DEFAULT nextval('#sec'),
  		message varchar(500) NOT NULL,
  		type varchar(20) DEFAULT 'OkDialog',
  		extra_js JSONB DEFAULT NULL,
  		start_time TIMESTAMP DEFAULT (now() at time zone 'utc'),
  		expire_time TIMESTAMP DEFAULT (now() at time zone 'utc') + interval '7 days',
- 		CONSTRAINT pk_${DbNames.T_SystemMessageVsCommon} PRIMARY KEY (Id)
+ 		CONSTRAINT pk_#tb PRIMARY KEY (Id)
  		);
- 		''';
+ 		'''
+      .replaceFirst('#sec', DbNames.Seq_SystemMessage)
+      .replaceAll('#tb', DbNames.T_SystemMessageVsCommon);
 
   static final String QIdx_SystemMessageVsCommon$start_time = '''
    	CREATE INDEX IF NOT EXISTS ${DbNames.T_SystemMessageVsCommon}_start_time_idx
@@ -693,7 +695,7 @@ class DatabaseNs {
 
   static final String QTbl_SystemMessageVsUser = '''
  	CREATE TABLE IF NOT EXISTS #tb (
-    id BIGINT NOT NULL DEFAULT nextval('Seq_SystemMessage'),
+    id BIGINT NOT NULL DEFAULT nextval('#sec'),
     user_id BIGINT NOT NULL DEFAULT -1,
     show_count INT DEFAULT 1,
     message varchar(1000) NOT NULL,
@@ -707,7 +709,7 @@ class DatabaseNs {
     ON DELETE SET DEFAULT ON UPDATE CASCADE);
  	'''
       .replaceAll('#tb', DbNames.T_SystemMessageVsUser)
-      .replaceFirst('Seq_SystemMessage', DbNames.Seq_SystemMessage);
+      .replaceFirst('#sec', DbNames.Seq_SystemMessage);
 
   static final String QIdx_SystemMessageVsUser$user_id = '''
       CREATE INDEX IF NOT EXISTS #tb_user_id_idx

@@ -54,7 +54,7 @@ class CommonMethods {
     getDataTypes.add(UserDataType.lastTouch);
 
     final res = await _getInfoForUser(userId, getDataTypes);
-    JsonHelper.removeKeys(res, [Keys.sex, Keys.birthdate, ...PublicAccess.avoidForLimitedUser]);
+    JsonHelper.removeKeys(res, [Keys.sex, Keys.birthdate, /*...PublicAccess.avoidForLimitedUser*/]);
 
     return res;
   }

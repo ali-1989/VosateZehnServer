@@ -14,6 +14,7 @@ import 'package:assistance_kit/shellAssistance.dart';
 import 'package:vosate_zehn_server/app/pathNs.dart';
 import 'package:vosate_zehn_server/constants.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
+import 'package:vosate_zehn_server/services/fcmService.dart';
 
 class CronAssistance {
   CronAssistance._();
@@ -183,5 +184,9 @@ class CronAssistance {
 
     //final deleteNotVerifyUser = CronJob.createCronJob(OneHour * 24, CronAssistance.jFun_deleteNotVerify);
     //deleteNotVerifyUser.start();
+
+    final sendDailyText = CronJob.createExactCronJob(tehranTZ, 9, 30, OneHour * 24, FcmService.jFun_DailyText, true);
+    sendDailyText.start();
+
   }
 }

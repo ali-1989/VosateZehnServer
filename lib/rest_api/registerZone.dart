@@ -3,7 +3,7 @@ import 'package:assistance_kit/dateSection/dateHelper.dart';
 import 'package:assistance_kit/api/generator.dart';
 import 'package:assistance_kit/api/helpers/LocaleHelper.dart';
 import 'package:assistance_kit/api/helpers/textHelper.dart';
-import 'package:vosate_zehn_server/app/sms_0098.dart';
+import 'package:vosate_zehn_server/services/sms_0098.dart';
 import 'package:vosate_zehn_server/database/databaseNs.dart';
 import 'package:vosate_zehn_server/database/dbNames.dart';
 import 'package:vosate_zehn_server/database/models/emailModel.dart';

@@ -1218,15 +1218,6 @@ class GraphHandler {
 
 
 
-
-
-
-
-
-
-
-
-
   static Future<Map<String, dynamic>> deleteProfileAvatar(HttpRequest req, Map<String, dynamic> js) async{
     final userId = js[Keys.userId];
 
@@ -1246,88 +1237,6 @@ class GraphHandler {
     return res;
   }
 
-  /*static Future<Map<String, dynamic>> updateProfileAvatar(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final partName = js[Keys.partName];
-    final fileName = js[Keys.fileName];
-
-    if(userId == null || partName == null || fileName == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final body = req.store.get('Body');
-    //final file = body[partName] as HttpBodyFileUpload;
-    final savedFile = await ServerNs.uploadFile(req, body, partName);
-
-    if(savedFile == null){
-      return generateResultError(HttpCodes.error_notUpload);
-    }
-
-    final okDb = await UserImageModelDb.upsertUserImage(userId, 1, savedFile.path);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError , cause: 'Not save [UserImages]');
-    }
-
-    final res = generateResultOk();
-    res[Keys.userId] = userId;
-    res[Keys.fileUri] = PathsNs.genUrlDomainFromFilePath(PublicAccess.domain, PathsNs.getCurrentPath(), savedFile.path);
-    //--- To other user's devices ------------------------------------
-    final match = WsMessenger.generateWsMessage(section: HttpCodes.sec_userData, command: HttpCodes.com_updateProfileSettings);
-    match[Keys.userId] = userId;
-    match[Keys.data] = await CommonMethods.getUserLoginInfo(userId, false);
-
-    // ignore: unawaited_futures
-    WsMessenger.sendToAllUserDevice(userId, JsonHelper.mapToJson(match));
-
-    //--- To other user chats ------------------------------------
-    WsMessenger.sendDataToOtherUserChats(userId, 'tod');
-
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> updateBodyPhoto(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-    final deviceId = js[Keys.deviceId];
-    final partName = js[Keys.partName]; // back_photo, front_photo
-    final fileName = js[Keys.fileName];
-
-    if(userId == null || partName == null || fileName == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    final body = req.store.get('Body');
-    //final file = body[partName] as HttpBodyFileUpload;
-    final savedFile = await ServerNs.uploadFile(req, body, partName);
-
-    if(savedFile == null){
-      return generateResultError(HttpCodes.error_notUpload);
-    }
-
-    final uri = PathsNs.genUrlDomainFromLocalPathByDecoding(PublicAccess.domain, PathsNs.getCurrentPath(), savedFile.path)!;
-
-    final okDb = await UserFitnessDataModelDb.upsertUserFitnessImage(userId, partName, uri);
-
-    if(!okDb) {
-      return generateResultError(HttpCodes.error_databaseError , cause: 'Not save [fitness Image]');
-    }
-
-    final res = generateResultOk();
-    res[Keys.userId] = userId;
-    res[Keys.fileUri] = uri;
-    res.addAll(await UserFitnessDataModelDb.getUserFitnessStatusJs(userId));
-
-    //--------- To other user's devices ------------------------------------
-    final match = WsMessenger.generateWsMessage(section: HttpCodes.sec_userData, command: HttpCodes.com_updateProfileSettings);
-    match[Keys.userId] = userId;
-    match[Keys.data] = await CommonMethods.getUserLoginInfo(userId, false);
-
-    // ignore: unawaited_futures
-    WsMessenger.sendToOtherDeviceAvoidMe(userId, deviceId, JsonHelper.mapToJson(match));
-    //---------------------------------------------------------------
-    return res;
-  }
-*/
   static Future<Map<String, dynamic>> setUserBlockingState(HttpRequest req, Map<String, dynamic> js) async{
     final requesterId = js[Keys.requesterId];
     final forUserId = js[Keys.forUserId];

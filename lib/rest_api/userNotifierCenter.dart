@@ -1,7 +1,7 @@
 
 import 'package:assistance_kit/dateSection/dateHelper.dart';
 import 'package:vosate_zehn_server/database/models/userNotifier.dart';
-import 'package:vosate_zehn_server/rest_api/wsMessenger.dart';
+import 'package:vosate_zehn_server/webSocket/wsMessenger.dart';
 
 class UserNotifierCenter {
   UserNotifierCenter._();

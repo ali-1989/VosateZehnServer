@@ -12,7 +12,7 @@ import 'package:vosate_zehn_server/models/countryModel.dart';
 import 'package:vosate_zehn_server/models/currencyModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/serverNs.dart';
-import 'package:vosate_zehn_server/rest_api/wsServerNs.dart';
+import 'package:vosate_zehn_server/webSocket/wsServerNs.dart';
 import 'package:vosate_zehn_server/webSite/webNs.dart';
 
 // db[bigint]   == dart[int]

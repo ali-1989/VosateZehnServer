@@ -20,7 +20,7 @@ import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
 import 'package:vosate_zehn_server/rest_api/loginZone.dart';
 import 'package:vosate_zehn_server/rest_api/registerZone.dart';
 import 'package:vosate_zehn_server/rest_api/searchFilterTool.dart';
-import 'package:vosate_zehn_server/rest_api/wsMessenger.dart';
+import 'package:vosate_zehn_server/webSocket/wsMessenger.dart';
 
 class GraphHandlerWrap {
   late HttpRequest request;

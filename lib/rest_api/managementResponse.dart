@@ -3,7 +3,7 @@ import 'package:alfred/alfred.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
-import 'package:vosate_zehn_server/rest_api/wsServerNs.dart';
+import 'package:vosate_zehn_server/webSocket/wsServerNs.dart';
 
 class ManagementResponse {
   ManagementResponse._();

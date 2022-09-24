@@ -4,7 +4,7 @@ import 'package:vosate_zehn_server/app/pathNs.dart';
 import 'package:vosate_zehn_server/database/dbNames.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
-import 'package:vosate_zehn_server/rest_api/wsServerNs.dart';
+import 'package:vosate_zehn_server/webSocket/wsServerNs.dart';
 import 'package:postgresql2/postgresql.dart';
 
 

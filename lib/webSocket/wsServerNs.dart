@@ -14,7 +14,7 @@ import 'package:vosate_zehn_server/database/models/userBlockList.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
-import 'package:vosate_zehn_server/rest_api/wsMessenger.dart';
+import 'package:vosate_zehn_server/webSocket/wsMessenger.dart';
 import 'package:postgresql2/postgresql.dart';
 
 class WsServerNs {
@@ -22,9 +22,7 @@ class WsServerNs {
 
   static int minusOne = -1;
   static String key_AppVersionCode = 'app_version_code';
-  static String key_UserId = 'user_id';
   static String key_Heart = 'heart';
-  static String key_HowIs = 'how_is';
   static String key_Key = 'key';
   static String key_DeviceId = 'device_id';
   static String key_AppName = 'app_name';
@@ -172,7 +170,7 @@ class WsServerNs {
       }
     }
     else {
-      final userId = js[key_UserId];
+      final userId = js[Keys.userId];
       handlerUserData(js, ws, wsId, userId, deviceId, appVersionCode);
     }
   }
@@ -185,7 +183,7 @@ class WsServerNs {
       checkNewVersion_checkCanContinueByVersion(ws, userId, appVersionCode);
     }
 
-    if (js.containsKey(key_Heart) || js.containsKey(key_HowIs)) {
+    if (js.containsKey(key_Heart)) {
       if (userId != null) {
         sendUserMessages(ws, userId);
       }
@@ -269,7 +267,7 @@ class WsServerNs {
       }
       else {
         final hm = <String, dynamic>{};
-        hm[key_UserId] = userId;
+        hm[Keys.userId] = userId;
         hm[key_DeviceId] = deviceId;
         hm[key_WebSocketId] = wsId;
         hm[key_IsLogin] = true;
@@ -294,7 +292,7 @@ class WsServerNs {
       final sendJs = <String, dynamic>{};
       sendJs[HttpCodes.sec_command] = HttpCodes.com_forceLogOff;
       sendJs[Keys.cause] = 'blocked';
-      sendJs[key_UserId] = userId;
+      sendJs[Keys.userId] = userId;
 
       sendData(ws, JsonHelper.mapToJson(sendJs));
     }
@@ -431,7 +429,7 @@ class WsServerNs {
         final us = UserSession();
 
         us.deviceId = row[key_DeviceId];
-        us.userId = row[key_UserId];
+        us.userId = row[Keys.userId];
         us.webSocketId = row[key_WebSocketId];
         us.lastTouch = row[key_LastTouch];
 
@@ -454,7 +452,7 @@ class WsServerNs {
         final us = UserSession();
 
         us.deviceId = row[key_DeviceId];
-        us.userId = row[key_UserId];
+        us.userId = row[Keys.userId];
         us.webSocketId = row[key_WebSocketId];
         us.lastTouch = row[key_LastTouch];
 

@@ -1,9 +1,7 @@
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
-import 'package:vosate_zehn_server/database/models/users.dart';
 import 'package:vosate_zehn_server/keys.dart';
-import 'package:vosate_zehn_server/rest_api/commonMethods.dart';
 import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
-import 'package:vosate_zehn_server/rest_api/wsServerNs.dart';
+import 'package:vosate_zehn_server/webSocket/wsServerNs.dart';
 
 class WsMessenger {
   WsMessenger._();

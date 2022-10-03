@@ -250,7 +250,8 @@ class CommonMethods {
   }
 
   static Future<bool> deleteBucket(int bucketId) async {
-    return (await PublicAccess.psql2.delete(DbNames.T_Bucket, 'id = $bucketId')) > 0;
+    final r = await PublicAccess.psql2.delete(DbNames.T_Bucket, 'id = $bucketId');
+    return r != null && r > 0;
   }
 
   static Future<int?> getMediaIdFromBucket(int bucketId) async {
@@ -537,7 +538,8 @@ class CommonMethods {
   }
 
   static Future<bool> deleteSpeaker(int subBucketId) async {
-    return (await PublicAccess.psql2.delete(DbNames.T_speaker, 'id = $subBucketId')) > 0;
+    final r = await PublicAccess.psql2.delete(DbNames.T_speaker, 'id = $subBucketId');
+    return r != null && r > 0;
   }
 
   static Future<int?> getMediaIdFromSpeaker(int bucketId) async {

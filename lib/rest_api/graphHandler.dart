@@ -182,6 +182,18 @@ class GraphHandler {
       return getProfileData(wrapper);
     }
 
+    if (request == 'update_user_nameFamily') {
+      return updateProfileNameFamily(wrapper);
+    }
+
+    if (request == 'update_user_gender') {
+      return updateProfileSex(wrapper);
+    }
+
+    if (request == 'update_user_birthdate') {
+      return updateProfileBirthDate(wrapper);
+    }
+
     if (request == 'set_about_us_data') {
       return setAboutUsData(wrapper);
     }
@@ -1305,16 +1317,18 @@ class GraphHandler {
     return res;
   }
 
-  //@ admin
-  static Future<Map<String, dynamic>> updateProfileNameFamily(HttpRequest req, Map<String, dynamic> js) async{
-    final forUserId = js[Keys.forUserId];
-    String? name = js[Keys.name];
-    String? family = js['family'];
+  static Future<Map<String, dynamic>> updateProfileNameFamily(GraphHandlerWrap wrapper) async{
+    dynamic forUserId = wrapper.bodyJSON[Keys.forUserId];
+    String? name = wrapper.bodyJSON[Keys.name];
+    String? family = wrapper.bodyJSON[Keys.family];
 
     if(forUserId == null || name == null || family == null) {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
+    if(forUserId is String){
+      forUserId = int.tryParse(forUserId);
+    }
 
     if(name.isEmpty || family.isEmpty){
       return generateResultError(HttpCodes.error_parametersNotCorrect);
@@ -1340,13 +1354,16 @@ class GraphHandler {
     return res;
   }
 
-  //@ admin
-  static Future<Map<String, dynamic>> updateProfileSex(HttpRequest req, Map<String, dynamic> js) async{
-    final forUserId = js[Keys.forUserId];
-    int? sex = js['sex'];
+  static Future<Map<String, dynamic>> updateProfileSex(GraphHandlerWrap wrapper) async{
+    dynamic forUserId = wrapper.bodyJSON[Keys.forUserId];
+    int? sex = wrapper.bodyJSON[Keys.sex];
 
     if(forUserId == null || sex == null) {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    if(forUserId is String){
+      forUserId = int.tryParse(forUserId);
     }
 
     final okDb = await UserModelDb.changeUserSex(forUserId, sex);
@@ -1369,13 +1386,16 @@ class GraphHandler {
     return res;
   }
 
-  //@ admin
-  static Future<Map<String, dynamic>> updateProfileBirthDate(HttpRequest req, Map<String, dynamic> js) async{
-    final forUserId = js[Keys.forUserId];
-    String? birthDate = js['birthdate'];
+  static Future<Map<String, dynamic>> updateProfileBirthDate(GraphHandlerWrap wrapper) async{
+    dynamic forUserId = wrapper.bodyJSON[Keys.forUserId];
+    String? birthDate = wrapper.bodyJSON[Keys.date];
 
     if(forUserId == null || birthDate == null) {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    if(forUserId is String){
+      forUserId = int.tryParse(forUserId);
     }
 
     final okDb = await UserModelDb.changeUserBirthDate(forUserId, birthDate);

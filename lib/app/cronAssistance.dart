@@ -185,7 +185,7 @@ class CronAssistance {
     //final deleteNotVerifyUser = CronJob.createCronJob(OneHour * 24, CronAssistance.jFun_deleteNotVerify);
     //deleteNotVerifyUser.start();
 
-    final sendDailyText = CronJob.createExactCronJob(tehranTZ, 9, 30, OneHour * 24, FcmService.jFun_DailyText, true);
+    final sendDailyText = CronJob.createExactCronJob(tehranTZ, 7, 05, OneHour * 24, FcmService.jFun_DailyText, true);
     sendDailyText.start();
 
   }

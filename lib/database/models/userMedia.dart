@@ -15,7 +15,7 @@ class UserMediaModelDb extends DbModel {
   String? mediaPath;
   String? name;
   String? extension;
-  double? volume;
+  int? volume;
   double? width;
   double? height;
   String? date;
@@ -95,6 +95,7 @@ class UserMediaModelDb extends DbModel {
     mediaPath = map[Keys.mediaPath];
     name = map[Keys.name];
     extension = map['extension'];
+    //volume = v == null? null: (v as int).toDouble();
     volume = map['volume'];
     width = map['width'];
     height = map['height'];

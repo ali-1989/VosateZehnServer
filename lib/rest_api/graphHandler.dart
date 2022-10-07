@@ -5,6 +5,7 @@ import 'package:assistance_kit/api/converter.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
 import 'package:assistance_kit/dateSection/ADateStructure.dart';
 import 'package:assistance_kit/dateSection/dateHelper.dart';
+import 'package:vosate_zehn_server/app/pathNs.dart';
 import 'package:vosate_zehn_server/database/models/userBlockList.dart';
 import 'package:vosate_zehn_server/database/models/userConnection.dart';
 import 'package:vosate_zehn_server/database/models/userCountry.dart';
@@ -184,6 +185,14 @@ class GraphHandler {
 
     if (request == 'update_user_nameFamily') {
       return updateProfileNameFamily(wrapper);
+    }
+
+    if (request == 'Update_profile_avatar') {
+      return updateProfileAvatar(wrapper);
+    }
+
+    if (request == 'delete_profile_avatar') {
+      return deleteProfileAvatar(wrapper);
     }
 
     if (request == 'update_user_gender') {
@@ -1223,64 +1232,25 @@ class GraphHandler {
     return res;
   }
 
+  static Future<Map<String, dynamic>> deleteProfileAvatar(GraphHandlerWrap wrapper) async{
+    dynamic forUserId = wrapper.bodyJSON[Keys.forUserId];
 
-
-
-
-
-
-
-  static Future<Map<String, dynamic>> deleteProfileAvatar(HttpRequest req, Map<String, dynamic> js) async{
-    final userId = js[Keys.userId];
-
-    if(userId == null) {
+    if(forUserId == null) {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    final del = await UserMediaModelDb.deleteProfileImage(userId, 1);
+    if(forUserId is String) {
+      forUserId = int.tryParse(forUserId);
+    }
+
+    final del = await UserMediaModelDb.deleteProfileImage(forUserId, 1);
 
     if(!del) {
       return generateResultError(HttpCodes.error_databaseError , cause: 'Not delete from[UserImages]');
     }
 
     final res = generateResultOk();
-    res[Keys.userId] = userId;
-
-    return res;
-  }
-
-  static Future<Map<String, dynamic>> setUserBlockingState(HttpRequest req, Map<String, dynamic> js) async{
-    final requesterId = js[Keys.requesterId];
-    final forUserId = js[Keys.forUserId];
-    bool? state = js[Keys.state];
-    String? cause = js[Keys.cause];
-
-    if(forUserId == null || state == null) {
-      return generateResultError(HttpCodes.error_parametersNotCorrect);
-    }
-
-    // before call this method ,check requester is manager
-
-    if(state) {
-      final okDb = await UserBlockListModelDb.blockUser(forUserId, blocker: requesterId, cause: cause);
-
-      if(!okDb) {
-        return generateResultError(HttpCodes.error_databaseError , cause: 'Not change user block state');
-      }
-    }
-    else {
-      final okDb = await UserBlockListModelDb.unBlockUser(forUserId);
-
-      if(okDb == null || okDb < 1) {
-        return generateResultError(HttpCodes.error_databaseError , cause: 'Not change user block state');
-      }
-    }
-
-    final res = generateResultOk();
     res[Keys.userId] = forUserId;
-
-    //--- To all user's devices ------------------------------------
-    WsMessenger.sendYouAreBlocked(forUserId);
 
     return res;
   }
@@ -1418,6 +1388,50 @@ class GraphHandler {
     return res;
   }
 
+  static Future<Map<String, dynamic>> updateProfileAvatar(GraphHandlerWrap wrapper) async{
+    dynamic forUserId = wrapper.bodyJSON[Keys.forUserId];
+    final partName = wrapper.bodyJSON[Keys.partName];
+    final fileName = wrapper.bodyJSON[Keys.fileName];
+
+    if(forUserId == null || partName == null || fileName == null) {
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    if(forUserId is String){
+      forUserId = int.tryParse(forUserId);
+    }
+
+    final body = wrapper.request.store.get('Body');
+    //final file = body[partName] as HttpBodyFileUpload;
+    final savedFile = await ServerNs.uploadFile(wrapper.request, body, partName);
+
+    if(savedFile == null){
+      return generateResultError(HttpCodes.error_notUpload);
+    }
+
+    final okDb = await UserMediaModelDb.addUserImage(forUserId, 1, savedFile.path, savedFile.lengthSync());
+
+    if(!okDb) {
+      return generateResultError(HttpCodes.error_databaseError , cause: 'Not save [UserImages]');
+    }
+
+    final res = generateResultOk();
+    res[Keys.userId] = forUserId;
+    res[Keys.url] = PathsNs.genUrlDomainFromFilePath(PublicAccess.domain, PathsNs.getCurrentPath(), savedFile.path);
+    //--- To other user's devices ------------------------------------
+    final match = WsMessenger.generateWsMessage(section: HttpCodes.sec_userData, command: HttpCodes.com_updateProfileSettings);
+    match[Keys.userId] = forUserId;
+    match[Keys.data] = await CommonMethods.getUserLoginInfo(forUserId, false);
+
+    // ignore: unawaited_futures
+    WsMessenger.sendToAllUserDevice(forUserId, JsonHelper.mapToJson(match));
+
+    //--- To other user chats ------------------------------------
+    //WsMessenger.sendDataToOtherUserChats(userId, 'todo');
+
+    return res;
+  }
+
   static Future<Map<String, dynamic>> updateUserCountryIso(HttpRequest req, Map<String, dynamic> js) async{
     final userId = js[Keys.userId];
     String? countryCode = js[Keys.phoneCode];
@@ -1443,6 +1457,42 @@ class GraphHandler {
 
     // ignore: unawaited_futures
     WsMessenger.sendToAllUserDevice(userId, JsonHelper.mapToJson(match));
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> setUserBlockingState(HttpRequest req, Map<String, dynamic> js) async{
+    final requesterId = js[Keys.requesterId];
+    final forUserId = js[Keys.forUserId];
+    bool? state = js[Keys.state];
+    String? cause = js[Keys.cause];
+
+    if(forUserId == null || state == null) {
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    // before call this method ,check requester is manager
+
+    if(state) {
+      final okDb = await UserBlockListModelDb.blockUser(forUserId, blocker: requesterId, cause: cause);
+
+      if(!okDb) {
+        return generateResultError(HttpCodes.error_databaseError , cause: 'Not change user block state');
+      }
+    }
+    else {
+      final okDb = await UserBlockListModelDb.unBlockUser(forUserId);
+
+      if(okDb == null || okDb < 1) {
+        return generateResultError(HttpCodes.error_databaseError , cause: 'Not change user block state');
+      }
+    }
+
+    final res = generateResultOk();
+    res[Keys.userId] = forUserId;
+
+    //--- To all user's devices ------------------------------------
+    WsMessenger.sendYouAreBlocked(forUserId);
 
     return res;
   }

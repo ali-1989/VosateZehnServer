@@ -32,7 +32,8 @@ class FcmService {
 
     final headers = <String, String>{};
     headers['Content-Type'] = 'application/json';
-    headers['Authorization'] = 'key=AAAADCWdWB4:APA91bF7iFQi6Gphhdx_bllENIX28zdcqgJzOPdA11KC2NEVXWsF3Evf1pFkPKpsaYay_xf7nK60sgy_Tsf_kXfq1fR7b8WkkRctwmd7f5TfhPJj6eJBraTu8Y2pbIEMX3mT3W9b2F_y';
+    //headers['Authorization'] = 'key=AAAADCWdWB4:APA91bF7iFQi6Gphhdx_bllENIX28zdcqgJzOPdA11KC2NEVXWsF3Evf1pFkPKpsaYay_xf7nK60sgy_Tsf_kXfq1fR7b8WkkRctwmd7f5TfhPJj6eJBraTu8Y2pbIEMX3mT3W9b2F_y';
+    headers['Authorization'] = 'key=AAAAqkhvybQ:APA91bHG5KTBWAvMdd0I7-1RaIIGqjET2--CoN47ZxboKqvkWL5UX7IkKxrqn_HAU3XRWL4kBrhe4FbYVsNchY8mf_yBpFJR4gQP8kpqvKn43MJC9FXBID0pCZPRavm3fY3PO6ppOFIG';
 
     final requester = HttpItem();
     requester.method = 'POST';
@@ -69,6 +70,7 @@ class FcmService {
       if(db == null || db.isEmpty){
         return;
       }
+      PublicAccess.logger.logToAll('@@@@@@@@@@@@@@ count:  ${db.length}');
 
       for(final k in db) {
         final r = k.toMap();

@@ -27,8 +27,8 @@ class RegisterZone {
   static Future<Map<String, dynamic>?> checkCanRegister(GraphHandlerWrap wrapper, PreRegisterModelDb model) async{
 
     if (model.name == null || model.family == null
-        || model.phoneCode == null
-        || model.mobileNumber == null
+        ||
+        (model.email == null && model.mobileNumber == null)
     //|| model.userName == null
     //|| model.password == null
     ) {
@@ -39,8 +39,20 @@ class RegisterZone {
       return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'ExistUserName');
     }*/
 
-    if (await MobileNumberModelDb.existThisMobile(model.userType!, model.phoneCode, model.mobileNumber)) {
-      return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'existMobile');
+    if(model.mobileNumber != null){
+      if (await MobileNumberModelDb.existThisMobile(model.userType!, model.phoneCode, model.mobileNumber)) {
+        return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'existMobile');
+      }
+
+      /*if (await RegisterModelDb.existRegisteringFor(model.userName, model.phoneCode, model.mobileNumber)) {
+        return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'ExistUserName');
+      }*/
+    }
+
+    if(model.email != null){
+      if (await UserEmailDb.existThisEmail(model.userType!, model.email!)) {
+        return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'existEmail');
+      }
     }
 
     /*if (await PublicAccess.psql2.exist(DbNames.T_BadWords, "word = '${model.userName}'")) {
@@ -49,10 +61,6 @@ class RegisterZone {
 
     if (await PublicAccess.psql2.exist(DbNames.T_ReservedWords, "word = '${model.userName}'")) {
       return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'NotAcceptUserName');
-    }*/
-
-    /*if (await RegisterModelDb.existRegisteringFor(model.userName, model.phoneCode, model.mobileNumber)) {
-      return GraphHandler.generateResultError(HttpCodes.error_spacialError, cause: 'ExistUserName');
     }*/
 
     return null;
@@ -238,7 +246,6 @@ class RegisterZone {
     final byEmail = wrapper.bodyJSON.containsKey('email');
     final String? email = wrapper.bodyJSON['email'];
 
-
     final genUserId = await DatabaseNs.getNextSequence(DbNames.Seq_User);
 
     final preUserMap = preUserModel.toMap();
@@ -282,7 +289,7 @@ class RegisterZone {
       return GraphHandler.generateResultError(HttpCodes.error_databaseError, cause: 'Insert UserNameId Error');
     }
 
-    ///................. mobile
+    ///................. mobile/email
     if(byEmail){
       final userEmail = UserEmailDb();
       userEmail.email = email;
@@ -331,7 +338,6 @@ class RegisterZone {
     ///......................
 
     final res = GraphHandler.generateResultOk();
-
     final info = await CommonMethods.getUserLoginInfo(genUserId, false);
     res.addAll(info);
 

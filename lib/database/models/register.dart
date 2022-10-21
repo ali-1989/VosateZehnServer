@@ -19,6 +19,7 @@ class PreRegisterModelDb extends DbModel {
   String? country_iso;
   String? phoneCode;
   String? mobileNumber;
+  String? email;
   //String? password;
   String verify_code = '';
   Map? extra_js;
@@ -65,6 +66,7 @@ class PreRegisterModelDb extends DbModel {
     country_iso = map[Keys.countryIso];
     phoneCode = map[Keys.phoneCode]?? map['country_code'];
     mobileNumber = map[Keys.mobileNumber];
+    email = map['email'];
     verify_code = map['verify_code']?? '';
     extra_js = map[Keys.extraJs]; //JsonHelper.mapToJsonNullable();
   }
@@ -88,6 +90,7 @@ class PreRegisterModelDb extends DbModel {
     map[Keys.countryIso] = country_iso;
     map[Keys.phoneCode] = phoneCode;
     map['verify_code'] = verify_code;
+    map['email'] = email;
     map[Keys.extraJs] = CommonMethods.castToJsonb(extra_js);
 
     if(register_date != null) {

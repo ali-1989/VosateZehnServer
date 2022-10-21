@@ -9,12 +9,14 @@ import 'package:vosate_zehn_server/rest_api/AppHttpDio.dart';
 class FcmService {
   FcmService._();
 
-  static Future<bool> sendNotificationTopic(String topic, String? title, String text, Duration? expire) async {
+  static Future<bool> sendNotificationTopic(String topic, String? title, String text, Map? data, Duration? expire) async {
     final js = {};
     js['to'] = '/topics/$topic';
+
     js['notification'] = {
       'title' : title,
       'body' : text,
+      'click_action' : 'FLUTTER_NOTIFICATION_CLICK',
     };
 
     js['apns'] = {};
@@ -30,10 +32,18 @@ class FcmService {
       js['apns']['headers']['apns-expiration'] = '${ex.millisecondsSinceEpoch/1000}'; //seconds of utc
     };
 
+    if(data != null) {
+      js['data'] = data;
+    }
+
+    js['click_action'] = 'FLUTTER_NOTIFICATION_CLICK';
+    js['priority'] = 'high';
+    js['content_available'] = true;
+
     final headers = <String, String>{};
     headers['Content-Type'] = 'application/json';
-    //headers['Authorization'] = 'key=AAAADCWdWB4:APA91bF7iFQi6Gphhdx_bllENIX28zdcqgJzOPdA11KC2NEVXWsF3Evf1pFkPKpsaYay_xf7nK60sgy_Tsf_kXfq1fR7b8WkkRctwmd7f5TfhPJj6eJBraTu8Y2pbIEMX3mT3W9b2F_y';
     headers['Authorization'] = 'key=AAAAqkhvybQ:APA91bHG5KTBWAvMdd0I7-1RaIIGqjET2--CoN47ZxboKqvkWL5UX7IkKxrqn_HAU3XRWL4kBrhe4FbYVsNchY8mf_yBpFJR4gQP8kpqvKn43MJC9FXBID0pCZPRavm3fY3PO6ppOFIG';
+    //headers['Authorization'] = 'key=AAAADCWdWB4:APA91bF7iFQi6Gphhdx_bllENIX28zdcqgJzOPdA11KC2NEVXWsF3Evf1pFkPKpsaYay_xf7nK60sgy_Tsf_kXfq1fR7b8WkkRctwmd7f5TfhPJj6eJBraTu8Y2pbIEMX3mT3W9b2F_y';
 
     final requester = HttpItem();
     requester.method = 'POST';
@@ -74,8 +84,10 @@ class FcmService {
 
       for(final k in db) {
         final r = k.toMap();
+        final data = {};
+        data['id'] = r['id'];
         // ignore: unawaited_futures
-        sendNotificationTopic('daily_text', null, r['text'], Duration(days: 1));
+        sendNotificationTopic('daily_text', null, r['text'], data, Duration(days: 1));
       }
     }
     catch (e) {

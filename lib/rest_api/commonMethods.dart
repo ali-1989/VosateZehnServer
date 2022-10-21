@@ -572,12 +572,12 @@ class CommonMethods {
     return cursor[0].toList()[0];
   }
 
-  static Future<int> sortBucketContent(int contentId, List<int> mediaIds) async {
-
+  static Future<int> sortBucketContent(int contentId, List<int> mediaIds, bool forceOrder) async {
     final kv = <String, dynamic>{};
     kv['media_ids'] = Psql2.listToPgIntArray(mediaIds);
+    kv['has_order'] = forceOrder;
 
-    var cursor = await PublicAccess.psql2.updateKv(DbNames.T_BucketContent, kv, ' id = $contentId');
+    final cursor = await PublicAccess.psql2.updateKv(DbNames.T_BucketContent, kv, ' id = $contentId');
 
     if (cursor == null || cursor < 1) {
       return -1;
@@ -846,6 +846,19 @@ class CommonMethods {
     }
 
     return cursor.map((e) => e as int).toList();
+  }
+
+  static Future<bool> updateMediaTitle(int mediaId, String? title) async {
+    final kv = <String, dynamic>{};
+    kv['title'] = title;
+
+    final cursor = await PublicAccess.psql2.upsertWhereKv(DbNames.T_Media, kv, where: 'id = $mediaId');
+
+    if (cursor == null || cursor < 1) {
+      return false;
+    }
+
+    return true;
   }
 
 

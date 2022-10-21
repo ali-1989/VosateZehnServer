@@ -5,6 +5,15 @@ class DatabaseAlters {
   DatabaseAlters._();
 
   static Future fireBeforeDatabase() async {
+    await alter$addColumnToBucketContent();
+    //await alter$deleteTableSubBucket();
+  }
+
+  static Future fireAfterDatabase() async {
+    //test();
+  }
+
+  static Future alter$deleteTableSubBucket() async {
     final result = await PublicAccess.psql2.getColumsName(DbNames.T_SubBucket);
 
     if(result == null || result.isEmpty){
@@ -25,8 +34,19 @@ class DatabaseAlters {
     }
   }
 
-  static Future fireAfterDatabase() async {
-    //test();
+  static Future alter$addColumnToBucketContent(){
+    var q = '''
+    DO \$\$ BEGIN
+      ALTER TABLE #tb ADD COLUMN has_order bool DEFAULT true;
+     EXCEPTION WHEN others THEN
+      IF SQLSTATE = '42701' THEN null;
+      ELSE RAISE EXCEPTION '> % , %', SQLERRM, SQLSTATE;
+      END IF;
+     END \$\$;      
+    '''
+    .replaceFirst('#tb', DbNames.T_BucketContent);
+
+    return PublicAccess.psql2.queryCall(q);
   }
 
   static Future test(){
@@ -43,6 +63,4 @@ class DatabaseAlters {
 
     return PublicAccess.psql2.queryCall(q);
   }
-
-
 }

@@ -38,6 +38,7 @@ class PreRegisterModelDb extends DbModel {
 			phone_code varchar(7) DEFAULT NULL,
 			mobile_number varchar(18) DEFAULT NULL,
 			password varchar(20) DEFAULT NULL,
+			email varchar(200) DEFAULT NULL,
 			verify_code varchar(4) NOT NULL,
 			extra_js JSONB DEFAULT '{}'::JSONB,
 			CONSTRAINT pk_#tb PRIMARY KEY (Id),

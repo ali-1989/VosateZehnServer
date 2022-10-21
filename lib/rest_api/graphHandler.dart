@@ -279,6 +279,10 @@ class GraphHandler {
       return upsertBucketContent(wrapper);
     }
 
+    if (request == 'set_media_title') {
+      return setMediaTitle(wrapper);
+    }
+
     if (request == 'upsert_speaker') {
       return upsertSpeaker(wrapper);
     }
@@ -794,12 +798,13 @@ class GraphHandler {
     final medias = Converter.correctList<int>(wrapper.bodyJSON['media_ids']);
     final parentId = wrapper.bodyJSON['parent_id'];
     final contentId = wrapper.bodyJSON[Keys.id];
+    final forceOrder = wrapper.bodyJSON['force_order']?? true;
 
     if(medias == null || parentId == null || contentId == null){
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    final isOk = await CommonMethods.sortBucketContent(contentId, medias);
+    final isOk = await CommonMethods.sortBucketContent(contentId, medias, forceOrder);
 
     if(isOk < 1) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not sort bucket content');
@@ -902,6 +907,25 @@ class GraphHandler {
     res['speaker_list'] = speakers;
     res['media_list'] = mediaList?? [];
     res['all_count'] = count;
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> setMediaTitle(GraphHandlerWrap wrapper) async{
+    final mediaId = wrapper.bodyJSON[Keys.id];
+    final title = wrapper.bodyJSON[Keys.title];
+
+    if(mediaId == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final result = await CommonMethods.updateMediaTitle(mediaId, title);
+
+    if(!result) {
+      return generateResultError(HttpCodes.error_databaseError, cause: 'Not set title to media');
+    }
+
+    final res = generateResultOk();
 
     return res;
   }

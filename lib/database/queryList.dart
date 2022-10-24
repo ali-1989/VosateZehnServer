@@ -111,7 +111,7 @@ class QueryList {
   static String getSubBuckets(SearchFilterTool sf){
     var q = '''SELECT * FROM #tb WHERE (#w) AND
         parent_id = #pId
-        order by date DESC
+        order by date ASC
         limit #lim
         ''';
 

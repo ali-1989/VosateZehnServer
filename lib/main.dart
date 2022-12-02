@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'package:assistance_kit/api/generator.dart';
 import 'package:assistance_kit/database/psql2.dart';
 import 'package:assistance_kit/api/helpers/jsonHelper.dart';
 import 'package:assistance_kit/api/logger/logger.dart';
@@ -20,9 +22,23 @@ import 'package:vosate_zehn_server/webSite/webNs.dart';
 
 
 void main(List<String> arguments) async {
-  PathsNs.init();
-  PublicAccess.logger = Logger(PathsNs.getLogPath());
-  await PublicAccess.logger.isPrepare();
+  await runZonedGuarded(() async {
+    try{
+      PathsNs.init();
+      PublicAccess.logger = Logger(PathsNs.getLogPath());
+      await PublicAccess.logger.isPrepare();
+
+      mainApp();
+    }
+    catch (e){
+      final finder = Generator.generateIntId(5);
+      PublicAccess.logger.logToAll('UNHANDLED EXCEPTION [finder: $finder]:: $e');
+      PublicAccess.sendReportToDeveloper('unhandled exception_$finder[${Constants.appName}]');
+    }
+  }, zonedGuardedCatch);
+}
+
+void mainApp() async {
   PublicAccess.setDomain();
 
   var startInfo = '''
@@ -44,13 +60,13 @@ void main(List<String> arguments) async {
     #######################################################################''';
 
   if (System.isLinux()) {
-    MemoryInfo.initial();
-    var ramInfo = 'RAM:  all: ${MemoryInfo.mem_total_mb} MB,   free: ${MemoryInfo.mem_free_mb} MB';
-    ramInfo += '\n    SWAP:  all: ${MemoryInfo.swap_total_mb} MB,   free: ${MemoryInfo.swap_free_mb} MB';
-    startInfo = startInfo.replaceFirst(r'*ram*', ramInfo);
+  MemoryInfo.initial();
+  var ramInfo = 'RAM:  all: ${MemoryInfo.mem_total_mb} MB,   free: ${MemoryInfo.mem_free_mb} MB';
+  ramInfo += '\n    SWAP:  all: ${MemoryInfo.swap_total_mb} MB,   free: ${MemoryInfo.swap_free_mb} MB';
+  startInfo = startInfo.replaceFirst(r'*ram*', ramInfo);
   }
   else {
-    startInfo = startInfo.replaceFirst('*ram*', '');
+  startInfo = startInfo.replaceFirst('*ram*', '');
   }
 
   // ignore: unawaited_futures
@@ -84,7 +100,24 @@ void main(List<String> arguments) async {
   PublicAccess.logger.logToAll('-------------| All things is Ok');
   codes();
 }
+///==============================================================================================
+void zonedGuardedCatch(error, sTrace) {
+  final finder = Generator.generateIntId(5);
+  var txt = 'ZONED-GUARDED CAUGHT AN ERROR [finder: $finder]:: ${error.toString()}';
 
+  if(PublicAccess.isReleaseMode()) {
+    txt += '\n STACK TRACE:: $sTrace';
+  }
+
+  txt += '\n**************************************** [END ZONED-GUARDED]';
+  PublicAccess.logger.logToAll(txt);
+  PublicAccess.sendReportToDeveloper('zonedGuardedCatch_$finder[${Constants.appName}]');
+
+  if(!PublicAccess.isReleaseMode()) {
+    throw error;
+  }
+}
+///==============================================================================================
 void codes() async {
   //DatabaseAlters.simulate_addTicketMessage(ticketIds: [102,103,105]);
   //FakeAndHack.simulate_addTicketWithMessage(102, 102);

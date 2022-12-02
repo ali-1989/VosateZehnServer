@@ -60,7 +60,7 @@ class FcmService {
     }
 
     if(res.statusCode == 200){
-      PublicAccess.logger.logToAll('@@@@@@@@@@@@@@ res  ${res.data}');
+      PublicAccess.logger.logToAll('DailyText_firebase: ${res.data}');
       return true;
     }
 
@@ -68,7 +68,7 @@ class FcmService {
   }
   //--------------------------------------------------------------------------------
   static JobTask jFun_DailyText = JobTask()..call = () async {
-    PublicAccess.logger.logToAll('@@@@@@@@@@@@@@ jFun_DailyText  ${DateTime.now()}');
+    PublicAccess.logger.logToAll('jFun_DailyText  ${DateTime.now()}');
 
     try {
       final q = '''
@@ -80,7 +80,6 @@ class FcmService {
       if(db == null || db.isEmpty){
         return;
       }
-      PublicAccess.logger.logToAll('@@@@@@@@@@@@@@ count:  ${db.length}');
 
       for(final k in db) {
         final r = k.toMap();

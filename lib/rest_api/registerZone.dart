@@ -111,7 +111,6 @@ class RegisterZone {
   }
   ///--------------------------------------------------------------------------
   static Future<Map<String, dynamic>> preRegisterByMobileAndSendOtp(GraphHandlerWrap wrapper) async{
-    print('==================== B1');
     var mobileNumber = wrapper.bodyJSON[Keys.mobileNumber];
     var phoneCode = wrapper.bodyJSON[Keys.phoneCode];
     final countryIso = wrapper.bodyJSON[Keys.countryIso];
@@ -152,7 +151,6 @@ class RegisterZone {
   }
   ///--------------------------------------------------------------------------
   static Future<Map<String, dynamic>> verifyOtpAndCompletePreRegistering(GraphHandlerWrap wrapper) async {
-    print('==================== C1');
     String? mobileNumber = wrapper.bodyJSON[Keys.mobileNumber];
     String? phoneCode = wrapper.bodyJSON[Keys.phoneCode];
     String? code = wrapper.bodyJSON['code'];
@@ -221,12 +219,10 @@ class RegisterZone {
   static Future<Map<String, dynamic>> registerUserWithFullData(GraphHandlerWrap wrapper) async {
     final appName = wrapper.bodyJSON[Keys.appName];
     //final isExerciseTrainer = json['is_exercise_trainer'];
-    print('==================== A1');
     final preRegisterModel = PreRegisterModelDb.fromMap(wrapper.bodyJSON);
     preRegisterModel.userType = UserTypeModel.getUserTypeNumByAppName(appName);
 
     final canRegister = await checkCanRegister(wrapper, preRegisterModel);
-    print('==================== A2: $canRegister');
 
     if(canRegister != null) {
       return canRegister;
@@ -235,7 +231,6 @@ class RegisterZone {
     //preRegisterModel.id = await DatabaseNs.getNextSequenceNumeric(DbNames.Seq_NewUser);
 
     final x = await PreRegisterModelDb.upsertModel(preRegisterModel);
-    print('==================== A3: $x');
 
     if(x != null && x > 0) {
       return completeRegistering(wrapper, preRegisterModel);

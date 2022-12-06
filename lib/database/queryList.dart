@@ -397,7 +397,7 @@ left join #tb4 as t4
     }
 
     q = q.replaceFirst('#w', w);
-    print(q);
+
     return q;
   }
 

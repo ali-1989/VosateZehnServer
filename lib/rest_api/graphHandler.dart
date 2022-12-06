@@ -21,6 +21,7 @@ import 'package:vosate_zehn_server/rest_api/httpCodes.dart';
 import 'package:vosate_zehn_server/rest_api/loginZone.dart';
 import 'package:vosate_zehn_server/rest_api/registerZone.dart';
 import 'package:vosate_zehn_server/rest_api/searchFilterTool.dart';
+import 'package:vosate_zehn_server/rest_api/statisticsApis.dart';
 import 'package:vosate_zehn_server/webSocket/wsMessenger.dart';
 
 class GraphHandlerWrap {
@@ -335,6 +336,13 @@ class GraphHandler {
       return searchOnData(wrapper);
     }
 
+    if (request == 'get_user_statistics') {
+      return getUserStatistics(wrapper);
+    }
+
+    if (request == 'search_users') {
+      return searchUsers(wrapper);
+    }
 
     return generateResultError(HttpCodes.error_requestNotDefined);
   }
@@ -1520,4 +1528,31 @@ class GraphHandler {
 
     return res;
   }
+
+  static Future<Map<String, dynamic>> getUserStatistics(GraphHandlerWrap wrapper) async{
+    final statistics = await StatisticsApis.getUserStatistics();
+
+    final res = generateResultOk();
+    res.addAll(statistics);
+
+    return res;
+  }
+
+  static Future<Map<String, dynamic>> searchUsers(GraphHandlerWrap wrapper) async{
+    final searchFilter = wrapper.bodyJSON[Keys.searchFilter];
+
+    if(searchFilter == null){
+      return generateResultError(HttpCodes.error_parametersNotCorrect);
+    }
+
+    final sf = SearchFilterTool.fromMap(searchFilter);
+    final list = await CommonMethods.searchOnUsers(sf);
+
+
+    final res = generateResultOk();
+    res[Keys.data] = list;
+
+    return res;
+  }
+
 }

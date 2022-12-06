@@ -21,7 +21,6 @@ import 'package:vosate_zehn_server/database/querySelector.dart';
 import 'package:vosate_zehn_server/models/enums.dart';
 import 'package:vosate_zehn_server/models/photoDataModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
-import 'package:vosate_zehn_server/rest_api/queryFiltering.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/rest_api/searchFilterTool.dart';
 
@@ -861,38 +860,9 @@ class CommonMethods {
     return true;
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // [AppUser] for manager app
-  static Future<List<Map<String, dynamic>>> searchOnUsers(Map<String, dynamic> jsOption) async {
-    final fq = FilterRequest.fromMap(jsOption[Keys.filtering]);
-    final qSelector = QuerySelector();
-
-    final replace = <String, dynamic>{};
-    replace['LIMIT x'] = 'LIMIT ${fq.limit}';
-    replace['OFFSET x'] = 'OFFSET ${fq.offset}';
-
-    qSelector.addQuery(''/*QueryList.simpleUsers_q1(fq)*/);
-
-    final cursor = await PublicAccess.psql2.queryCall(qSelector.generate(0, replace));
+  // [AppUser] for manager
+  static Future<List<Map<String, dynamic>>> searchOnUsers(SearchFilterTool filter) async {
+    final cursor = await PublicAccess.psql2.queryCall(QueryList.searchUsers(filter));
 
     if (cursor == null || cursor.isEmpty) {
       return <Map<String, dynamic>>[];
@@ -902,6 +872,29 @@ class CommonMethods {
       return (e.toMap() as Map<String, dynamic>);
     }).toList();
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

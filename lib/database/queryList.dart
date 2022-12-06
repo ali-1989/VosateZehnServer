@@ -358,4 +358,47 @@ class QueryList {
     return q;
   }
 
+  static String searchUsers(SearchFilterTool sf){
+    var q = '''
+    select t1.user_id, t1.name, t1.family, t1.sex, t1.birthdate, t1.register_date,
+       t2.user_name, t3.mobile_number, t4.email
+    from #tb1 as t1
+join #tb2 as t2
+    on t1.user_id = t2.user_id
+left join #tb3 as t3
+     on t1.user_id = t3.user_id
+left join #tb4 as t4
+     on t1.user_id = t4.user_id
+ WHERE (#w) 
+        order by register_date DESC
+        limit #lim
+        ''';
+
+    q = q.replaceFirst('#tb1', DbNames.T_Users);
+    q = q.replaceFirst('#tb2', DbNames.T_UserNameId);
+    q = q.replaceFirst('#tb3', DbNames.T_MobileNumber);
+    q = q.replaceFirst('#tb4', DbNames.T_UserEmail);
+    q = q.replaceFirst('#lim', '${sf.limit}');
+
+    var w = 'true';
+
+    /*if(sf.filters['is_hide'] == null){
+      w = 'is_hide = false';
+    }*/
+
+    if(sf.searchText != null){
+      final t = '\$t\$%${sf.searchText}%\$t\$';
+
+      w += ' AND (name like $t OR family like $t OR mobile_number like $t OR email like $t)';
+    }
+
+    if(sf.lower != null){
+      w += " AND (register_date < '${sf.lower}'::timestamp)";
+    }
+
+    q = q.replaceFirst('#w', w);
+    print(q);
+    return q;
+  }
+
 }

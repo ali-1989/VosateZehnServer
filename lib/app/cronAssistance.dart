@@ -140,26 +140,6 @@ class CronAssistance {
       Logger.L.logToAll('CronCheckClosedWs: ${code}_$e');
     }
   };*/
-  //------------------------------------------------------------------------------------
-  static JobTask jFun_checkAllDbWsSessions = JobTask()..call = (){
-    try {
-      //checkWsSessionOnDB();
-      checkUserOnLineDB();
-    }
-    catch (e) {
-      final code = Generator.generateKey(5);
-      Logger.L.logToAll('Cron_checkAllDbWsSessions:' + code);
-    }
-  };
-
-  /*static void checkWsSessionOnDB() {
-    final q = 'SELECT * FROM \"TT1\" WHERE LastTouch < ##1 AND WebSocketId IS NOT NULL;';
-  }*/
-
-  static void checkUserOnLineDB() {
-    //todo  check in T_UserConnections if lastTouch > 10 min: set login to false
-    //String q = 'SELECT * FROM \"TT1\" WHERE LastTouch < ##1 AND WebSocketId IS NOT NULL;';
-  }
   ///===================================================================================================
   static void startCronJobs() {
     final tehranTZ = 'Asia/Tehran';
@@ -172,9 +152,6 @@ class CronAssistance {
 
     final backupDBJob = CronJob.createExactCronJob(tehranTZ, 3, 30, OneHour * 24, CronAssistance.jFun_backupDB, false);
     backupDBJob.start();
-
-    final checkAllWsSession = CronJob.createCronJob(OneHour * 2, CronAssistance.jFun_checkAllDbWsSessions);
-    checkAllWsSession.start();
 
     final clearSystemCache = CronJob.createCronJob(OneHour * 8, CronAssistance.jFun_clearSystemCache);
 

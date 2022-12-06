@@ -5,12 +5,11 @@ class DatabaseAlters {
   DatabaseAlters._();
 
   static Future fireBeforeDatabase() async {
-    await alter$addColumnToBucketContent();
     //await alter$deleteTableSubBucket();
   }
 
   static Future fireAfterDatabase() async {
-    //test();
+    await alter$addColumnToBucketContent();
   }
 
   static Future alter$deleteTableSubBucket() async {

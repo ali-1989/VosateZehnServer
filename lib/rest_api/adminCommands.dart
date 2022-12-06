@@ -15,6 +15,8 @@ class AdminCommands {
     'upsert_speaker',
     'delete_speaker',
     'get_tickets',
+    'get_user_statistics',
+    'search_users',
   ];
 
   static bool isAdminCommand(String request){

@@ -177,4 +177,12 @@ class PreRegisterModelDb extends DbModel {
 
     return !(x == null || x < 1);
   }
+
+  static Future<bool> deleteRecordByEmail(String email) async {
+    final where = " email = '$email'";
+
+    final x = await PublicAccess.psql2.delete(DbNames.T_PreRegisteringUser, where);
+
+    return !(x == null || x < 1);
+  }
 }

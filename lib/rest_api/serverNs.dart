@@ -52,7 +52,7 @@ class ServerNs {
         }
       }
       else if(type == LogType.error){
-        PublicAccess.logInDebug(res);
+        PublicAccess.logInDebug('Alfred error log: $res');
       }
 
       if((res is String) && res == 'Response sent to client') {
@@ -61,9 +61,13 @@ class ServerNs {
     };
 
     server.onInternalError = (HttpRequest req, HttpResponse res){
-      PublicAccess.logger.logToAll('>>> Internal Error: ${req.method}, ${req.uri}');
+      var txt = '>>> Internal Error: ${req.method}, ${req.uri} ';
+      txt = txt + '| exception:${req.exception} |\n';
+      txt = txt + StackTrace.current.toString();
 
-      //get error: res.statusCode = HttpStatus.internalServerError;// 500
+      PublicAccess.logger.logToAll(txt);
+
+      //res.statusCode = HttpStatus.internalServerError;// 500, this get error
       return {'message': 'Internal Error, not handled'};
     };
 

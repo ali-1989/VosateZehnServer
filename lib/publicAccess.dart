@@ -34,7 +34,7 @@ class PublicAccess {
       return true;
     }
 
-    assert(fn(), 'isInDebugMode');
+    assert(fn(), 'isInDebugMode_if_call');
     return isInReleaseMode;
 
     //return const bool.fromEnvironment('dart.vm.product');
@@ -45,7 +45,7 @@ class PublicAccess {
       domain = 'http://vosatezehn.com:${Constants.port}';
     }
     else {
-      domain = 'http://192.168.43.140:${Constants.port}'; //1.103 , 43.140
+      domain = 'http://192.168.43.140:${Constants.port}'; //1.103 | 43.140
     }
   }
 

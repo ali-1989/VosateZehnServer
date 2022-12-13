@@ -13,10 +13,7 @@ import 'package:vosate_zehn_server/database/databaseNs.dart';
 import 'package:vosate_zehn_server/models/countryModel.dart';
 import 'package:vosate_zehn_server/models/currencyModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
-import 'package:vosate_zehn_server/rest_api/commonMethods.dart';
-import 'package:vosate_zehn_server/rest_api/searchFilterTool.dart';
 import 'package:vosate_zehn_server/rest_api/serverNs.dart';
-import 'package:vosate_zehn_server/rest_api/statisticsApis.dart';
 import 'package:vosate_zehn_server/webSocket/wsServerNs.dart';
 import 'package:vosate_zehn_server/webSite/webNs.dart';
 
@@ -36,7 +33,7 @@ void main(List<String> arguments) async {
     catch (e){
       final finder = Generator.generateIntId(5);
       PublicAccess.logger.logToAll('UNHANDLED EXCEPTION [finder: $finder]:: $e');
-      PublicAccess.sendReportToDeveloper('unhandled exception_$finder[${Constants.appName}]');
+      //PublicAccess.sendReportToDeveloper('unhandled exception_$finder[${Constants.appName}]');
     }
   }, zonedGuardedCatch);
 }
@@ -44,7 +41,7 @@ void main(List<String> arguments) async {
 void mainApp() async {
   PublicAccess.setDomain();
 
-  var startInfo = '''
+  var startInfo = '''\n
     ====================================================================================
     ==== Name: ${Constants.serverName}
     ==== Ver: ${Constants.serverVersion}
@@ -114,7 +111,7 @@ void zonedGuardedCatch(error, sTrace) {
 
   txt += '\n**************************************** [END ZONED-GUARDED]';
   PublicAccess.logger.logToAll(txt);
-  PublicAccess.sendReportToDeveloper('zonedGuardedCatch_$finder[${Constants.appName}]');
+  //PublicAccess.sendReportToDeveloper('zonedGuardedCatch_$finder[${Constants.appName}]');
 
   if(!PublicAccess.isReleaseMode()) {
     throw error;
@@ -124,12 +121,6 @@ void zonedGuardedCatch(error, sTrace) {
 void codes() async {
   //DatabaseAlters.simulate_addTicketMessage(ticketIds: [102,103,105]);
   //FakeAndHack.simulate_addTicketWithMessage(102, 102);
-
-  /*final patch = 16;
-  final minor = 20;
-  final major = 50;
-
-  print(major *10000 + minor *100 + patch);*/
 }
 
 

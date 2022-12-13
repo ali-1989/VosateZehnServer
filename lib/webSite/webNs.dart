@@ -26,12 +26,7 @@ class WebNs {
     server.logWriter = (fn, type){
       var res = fn.call();
 
-      if(type == LogType.info){
-        if(res?.startsWith(RegExp('(GET|POST|PUT|OPTION)\.*'))?? false) {
-          PublicAccess.logInDebug(res);
-        }
-      }
-      else if(type == LogType.error){
+      if(type == LogType.error){
         PublicAccess.logInDebug(res);
       }
 

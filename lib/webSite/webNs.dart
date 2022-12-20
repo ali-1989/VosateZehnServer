@@ -8,7 +8,7 @@ import 'package:vosate_zehn_server/webSite/webHandler.dart';
 class WebNs {
 
   static Alfred prepareServer(){
-    var server = Alfred(logLevel: LogType.info);
+    var server = Alfred(logLevel: LogType.error);
 
     server.all('/*', (req, res) {
       res.headers.add('Access-Control-Allow-Origin', '*');
@@ -36,14 +36,14 @@ class WebNs {
     };
 
     server.onInternalError = (HttpRequest req, HttpResponse res){
-      PublicAccess.logger.logToAll('>>> Web Internal Error: ${req.method}, ${req.uri}');
+      PublicAccess.logger.logToAll('>>> Web Internal Error: [${req.method}] ${req.uri}');
 
       //get error: res.statusCode = HttpStatus.internalServerError;// 500
       return {'message': 'Internal Error, not handled web'};
     };
 
     server.onNotFound = (HttpRequest req, HttpResponse res) {
-      PublicAccess.logger.logToAll('>>> Web Error [NotFound] uri: ${req.uri} ');
+      PublicAccess.logger.logToAll('>>> Web [NotFound] uri: ${req.uri} ');
 
       res.statusCode = HttpStatus.notFound;// 404
       return {'message': 'not found'};

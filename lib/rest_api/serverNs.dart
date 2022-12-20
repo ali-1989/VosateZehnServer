@@ -13,13 +13,12 @@ class ServerNs {
   static final _publicCategories = <String, RegExp>{};
 
   static Alfred prepareServer(){
-    var server = Alfred(logLevel: LogType.info);
+    var server = Alfred(logLevel: LogType.error);
 
     // before all:
     //server.all('/*', (req, res) {
     //   PublicAccess.logInDebug('====== method: ${req.method}, uri: ${req.uri}');
     //});
-
 
     server.options('/*', (req, res) {
         res.headers.add('Access-Control-Allow-Origin', '*');

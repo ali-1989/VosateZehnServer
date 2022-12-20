@@ -156,7 +156,7 @@ class CronAssistance {
     final clearSystemCache = CronJob.createCronJob(OneHour * 8, CronAssistance.jFun_clearSystemCache);
 
     if (System.isLinux()) {
-      clearSystemCache.start();
+      //clearSystemCache.start();
     }
 
     //final deleteNotVerifyUser = CronJob.createCronJob(OneHour * 24, CronAssistance.jFun_deleteNotVerify);

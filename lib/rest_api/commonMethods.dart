@@ -172,7 +172,7 @@ class CommonMethods {
     return null;
   }
 
-  static Future<List<Map>?> getBuckets(int userId, Map jsData) async {
+  static Future<List<Map>?> getBuckets(Map jsData) async {
     final key = jsData[Keys.key];
     final sf = SearchFilterTool.fromMap(jsData[Keys.searchFilter]);
 

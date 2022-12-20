@@ -14,6 +14,7 @@ import 'package:vosate_zehn_server/models/countryModel.dart';
 import 'package:vosate_zehn_server/models/currencyModel.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
 import 'package:vosate_zehn_server/rest_api/serverNs.dart';
+import 'package:vosate_zehn_server/services/sms_kaveh.dart';
 import 'package:vosate_zehn_server/webSocket/wsServerNs.dart';
 import 'package:vosate_zehn_server/webSite/webNs.dart';
 
@@ -94,6 +95,7 @@ void mainApp() async {
   await PublicAccess.webServer.listen(80);
 
 
+  SmsKaveh.init();
   CronAssistance.startCronJobs();
 
   // ignore: unawaited_futures
@@ -121,6 +123,10 @@ void zonedGuardedCatch(error, sTrace) {
 void codes() async {
   //DatabaseAlters.simulate_addTicketMessage(ticketIds: [102,103,105]);
   //FakeAndHack.simulate_addTicketWithMessage(102, 102);
+  final x = await SmsKaveh.sendOtpPost('09139277303', '1111111');
+  final x2 = await SmsKaveh.sendSmsGet('9139277303', 'hi');
+  print(x);
+  print(x2);
 }
 
 

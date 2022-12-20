@@ -14,6 +14,8 @@ import 'package:vosate_zehn_server/database/models/users.dart';
 import 'package:vosate_zehn_server/database/models/userNameId.dart';
 import 'package:vosate_zehn_server/keys.dart';
 import 'package:vosate_zehn_server/publicAccess.dart';
+import 'package:vosate_zehn_server/rest_api/freeUserCommands.dart';
+import 'package:vosate_zehn_server/rest_api/guestUserCommands.dart';
 import 'package:vosate_zehn_server/rest_api/serverNs.dart';
 import 'package:vosate_zehn_server/rest_api/adminCommands.dart';
 import 'package:vosate_zehn_server/rest_api/commonMethods.dart';
@@ -78,7 +80,28 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_zoneKeyNotFound);
     }
 
-    if (requesterId != null) {
+    if(requesterId == null){
+      if(!FreeUserCommands.isFreeCommand(request)){
+        return generateResultError(HttpCodes.error_canNotAccess);
+      }
+    }
+
+    final wrapper = GraphHandlerWrap();
+    wrapper.request = req;
+    wrapper.response = res;
+    wrapper.bodyJSON = bJSON;
+    wrapper.zoneRequest = request;
+    wrapper.userId = requesterId;
+    wrapper.deviceId = deviceId;
+
+    /// Guest user
+    if(requesterId == 0){
+      if(!GuestUserCommands.isGuestCommand(wrapper)){
+        return generateResultError(HttpCodes.error_canNotAccess);
+      }
+    }
+
+    if (requesterId != null && requesterId != 0) {
       final token = bJSON[Keys.token];
 
       if (!(await UserConnectionModelDb.tokenIsActive(requesterId, deviceId, token))) {
@@ -110,14 +133,6 @@ class GraphHandler {
     }
     ///.............................................................................................
     try{
-      final wrapper = GraphHandlerWrap();
-      wrapper.request = req;
-      wrapper.response = res;
-      wrapper.bodyJSON = bJSON;
-      wrapper.zoneRequest = request;
-      wrapper.userId = requesterId;
-      wrapper.deviceId = deviceId;
-
       return await _process(wrapper);
     }
     catch (e){
@@ -670,7 +685,7 @@ class GraphHandler {
       return generateResultError(HttpCodes.error_parametersNotCorrect);
     }
 
-    final buckets = await CommonMethods.getBuckets(wrapper.userId!, wrapper.bodyJSON);
+    final buckets = await CommonMethods.getBuckets(wrapper.bodyJSON);
 
     if(buckets == null) {
       return generateResultError(HttpCodes.error_databaseError, cause: 'Not get bucket');

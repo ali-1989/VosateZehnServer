@@ -34,7 +34,7 @@ class WsServerNs {
   static String key_WebSocketId = 'websocket_id';
   
   static Alfred prepareWsServer(){
-    final wsServer = Alfred();
+    final wsServer = Alfred(logLevel: LogType.error);
 
     wsServer.all('/*', (req, res) {
       res.headers.add('Access-Control-Allow-Origin', '*');

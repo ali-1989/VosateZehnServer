@@ -5,7 +5,7 @@ import 'package:dio/dio.dart';
 class SmsKaveh {
   SmsKaveh._();
 
-  static String apiKey = '4D57474F596E425570704F64584661726B45587457344665565A784B424C68686C775577413473675758773D';
+  static String apiKey = '31324C4D3649727378565334434255577A744E42625A31684A5774385774325138446F76557371587853673D';
   static String smsUrl = 'https://api.kavenegar.com/v1/{API-KEY}/sms/send.json';
   static String verifyUrl = 'https://api.kavenegar.com/v1/{API-KEY}/verify/lookup.json';
 
@@ -28,6 +28,7 @@ class SmsKaveh {
     final res = AppHttpDio.send(httpItem);
 
     return res.response.then((value){
+      print(value?.data);
       if(value != null) {
         if (value.data is DioError) {
           return false;
@@ -61,6 +62,7 @@ class SmsKaveh {
     var res = AppHttpDio.send(httpItem);
 
     return res.response.then((value){
+      print(value?.data);
       if(value != null) {
         if (value.data is DioError) {
           return false;
@@ -93,6 +95,7 @@ class SmsKaveh {
     var res = AppHttpDio.send(httpItem);
 
     return res.response.then((value){
+      print(value?.data);
       if(value != null) {
         if (value.data is DioError) {
           return false;
